@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
 
+use DateTimeInterface;
 use Ekyna\Bundle\CommerceBundle\Model\OrderInterface;
 
 /**
@@ -11,103 +14,46 @@ use Ekyna\Bundle\CommerceBundle\Model\OrderInterface;
  */
 class OrderNotification
 {
-    /**
-     * @var int
-     */
-    private $id;
+    private ?int $id = null;
+    private ?OrderInterface $order = null;
+    private ?DateTimeInterface $notifiedAt;
+    private bool $succeed = false;
 
-    /**
-     * @var OrderInterface
-     */
-    private $order;
-
-    /**
-     * @var \DateTime
-     */
-    private $notifiedAt;
-
-    /**
-     * @var bool
-     */
-    private $succeed;
-
-
-    /**
-     * Returns the id.
-     *
-     * @return int
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Returns the order.
-     *
-     * @return OrderInterface
-     */
-    public function getOrder()
+    public function getOrder(): ?OrderInterface
     {
         return $this->order;
     }
 
-    /**
-     * Sets the order.
-     *
-     * @param OrderInterface $order
-     *
-     * @return OrderNotification
-     */
-    public function setOrder(OrderInterface $order)
+    public function setOrder(?OrderInterface $order): OrderNotification
     {
         $this->order = $order;
 
         return $this;
     }
 
-    /**
-     * Returns the "notified at" date.
-     *
-     * @return \DateTime
-     */
-    public function getNotifiedAt()
+    public function getNotifiedAt(): ?DateTimeInterface
     {
         return $this->notifiedAt;
     }
 
-    /**
-     * Sets the "notified at" date.
-     *
-     * @param \DateTime $date
-     *
-     * @return OrderNotification
-     */
-    public function setNotifiedAt(\DateTime $date)
+    public function setNotifiedAt(?DateTimeInterface $date): OrderNotification
     {
         $this->notifiedAt = $date;
 
         return $this;
     }
 
-    /**
-     * Returns whether the notification succeed.
-     *
-     * @return bool
-     */
-    public function isSucceed()
+    public function isSucceed(): bool
     {
-        return (bool)$this->succeed;
+        return $this->succeed;
     }
 
-    /**
-     * Sets whether the notification succeed.
-     *
-     * @param bool $succeed
-     *
-     * @return OrderNotification
-     */
-    public function setSucceed(bool $succeed)
+    public function setSucceed(bool $succeed): OrderNotification
     {
         $this->succeed = $succeed;
 

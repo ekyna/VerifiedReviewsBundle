@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\EventListener;
 
 use Ekyna\Bundle\VerifiedReviewsBundle\Event\ReviewEvents;
@@ -19,29 +21,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class LoyaltyEventSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
+    private OrderRepositoryInterface $orderRepository;
+    private Features                 $features;
+    private LoyaltyUpdater           $updater;
 
-    /**
-     * @var Features
-     */
-    private $features;
-
-    /**
-     * @var LoyaltyUpdater
-     */
-    private $updater;
-
-
-    /**
-     * Constructor.
-     *
-     * @param OrderRepositoryInterface $orderRepository
-     * @param Features                 $features
-     * @param LoyaltyUpdater           $updater
-     */
     public function __construct(OrderRepositoryInterface $orderRepository, Features $features, LoyaltyUpdater $updater)
     {
         $this->orderRepository = $orderRepository;
@@ -49,11 +32,6 @@ class LoyaltyEventSubscriber implements EventSubscriberInterface
         $this->updater = $updater;
     }
 
-    /**
-     * Review insert event handler.
-     *
-     * @param ResourceEventInterface $event
-     */
     public function onReviewInsert(ResourceEventInterface $event): void
     {
         $review = $this->getReviewFromEvent($event);
@@ -75,13 +53,6 @@ class LoyaltyEventSubscriber implements EventSubscriberInterface
         $this->updater->add($customer, $points, 'Review #' . substr($review->getReviewId(), 0, 8));
     }
 
-    /**
-     * Finds the review customer.
-     *
-     * @param ReviewInterface $review
-     *
-     * @return CustomerInterface|null
-     */
     private function findReviewCustomer(ReviewInterface $review): ?CustomerInterface
     {
         if (null === $number = $review->getOrderNumber()) {
@@ -95,13 +66,6 @@ class LoyaltyEventSubscriber implements EventSubscriberInterface
         return $order->getCustomer();
     }
 
-    /**
-     * Returns the review from the event.
-     *
-     * @param ResourceEventInterface $event
-     *
-     * @return ReviewInterface
-     */
     private function getReviewFromEvent(ResourceEventInterface $event): ReviewInterface
     {
         $resource = $event->getResource();
@@ -113,13 +77,10 @@ class LoyaltyEventSubscriber implements EventSubscriberInterface
         return $resource;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
-            ReviewEvents::INSERT => [['onReviewInsert', 0]],
+            ReviewEvents::INSERT => ['onReviewInsert', 0],
         ];
     }
 }

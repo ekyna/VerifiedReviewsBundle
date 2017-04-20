@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
+
+use DateTimeInterface;
 
 /**
  * Class Comment
@@ -9,143 +13,71 @@ namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
  */
 class Comment
 {
-    /**
-     * @var int
-     */
-    private $id;
+    private ?int               $id       = null;
+    private ?Review            $review   = null;
+    private ?DateTimeInterface $date     = null;
+    private bool               $customer = true;
+    private ?string            $message  = null; // comment
 
-    /**
-     * @var Review
-     */
-    private $review;
-
-    /**
-     * @var \DateTime
-     */
-    private $date;
-
-    /**
-     * @var bool
-     */
-    private $customer;
-
-    /**
-     * (comment)
-     * @var string
-     */
-    private $message;
-
-
-    /**
-     * Returns the id.
-     *
-     * @return int
-     */
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Returns the review.
-     *
-     * @return Review
-     */
     public function getReview(): ?Review
     {
         return $this->review;
     }
 
-    /**
-     * Sets the review.
-     *
-     * @param Review $review
-     *
-     * @return Comment
-     */
-    public function setReview(Review $review = null): Comment
+    public function setReview(?Review $review): Comment
     {
-        if ($this->review !== $review) {
-            if ($this->review) {
-                $this->review->removeComment($this);
-            }
+        if ($this->review === $review) {
+            return $this;
+        }
 
-            $this->review = $review;
+        if ($this->review) {
+            $this->review->removeComment($this);
+        }
 
-            if ($review) {
-                $review->addComment($this);
-            }
+        $this->review = $review;
+
+        if ($this->review) {
+            $this->review->addComment($this);
         }
 
         return $this;
     }
 
-    /**
-     * Returns the date.
-     *
-     * @return \DateTime
-     */
-    public function getDate(): \DateTime
+    public function getDate(): ?DateTimeInterface
     {
         return $this->date;
     }
 
-    /**
-     * Sets the date.
-     *
-     * @param \DateTime $date
-     *
-     * @return Comment
-     */
-    public function setDate(\DateTime $date): Comment
+    public function setDate(?DateTimeInterface $date): Comment
     {
         $this->date = $date;
 
         return $this;
     }
 
-    /**
-     * Returns the customer.
-     *
-     * @return bool
-     */
-    public function isCustomer()
+    public function isCustomer(): bool
     {
-        return (bool)$this->customer;
+        return $this->customer;
     }
 
-    /**
-     * Sets the customer.
-     *
-     * @param bool $customer
-     *
-     * @return Comment
-     */
-    public function setCustomer($customer)
+    public function setCustomer(bool $customer): Comment
     {
         $this->customer = $customer;
 
         return $this;
     }
 
-    /**
-     * Returns the message.
-     *
-     * @return string
-     */
-    public function getMessage(): string
+    public function getMessage(): ?string
     {
         return $this->message;
     }
 
-    /**
-     * Sets the message.
-     *
-     * @param string $message
-     *
-     * @return Comment
-     */
-    public function setMessage(string $message): Comment
+    public function setMessage(?string $message): Comment
     {
         $this->message = $message;
 

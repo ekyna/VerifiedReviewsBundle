@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
 
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 
 /**
@@ -12,73 +16,33 @@ use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
  */
 class Product
 {
-    /**
-     * @var int
-     */
-    private $id;
+    private ?int               $id        = null;
+    private ?ProductInterface  $product   = null;
+    private ?int               $nbReviews = null;
+    private ?float             $rate      = null;
+    private ?DateTimeInterface $fetchedAt = null;
+    /** @var Collection<Review> */
+    private Collection $reviews;
 
-    /**
-     * @var ArrayCollection|Review[]
-     */
-    private $reviews;
-
-    /**
-     * @var ProductInterface
-     */
-    private $product;
-
-    /**
-     * @var int
-     */
-    private $nbReviews;
-
-    /**
-     * @var float
-     */
-    private $rate;
-
-    /**
-     * @var \DateTime
-     */
-    private $fetchedAt;
-
-
-    /**
-     * Constructor.
-     */
     public function __construct()
     {
         $this->reviews = new ArrayCollection();
     }
 
-    /**
-     * Returns the id.
-     *
-     * @return int
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
     /**
-     * Returns the product reviews.
-     *
-     * @return ArrayCollection|Review[]
+     * @return Collection<Review>
      */
-    public function getReviews()
+    public function getReviews(): Collection
     {
         return $this->reviews;
     }
 
-    /**
-     * Adds the product review.
-     *
-     * @param Review $review
-     *
-     * @return Product
-     */
-    public function addReview(Review $review)
+    public function addReview(Review $review): Product
     {
         if (!$this->reviews->contains($review)) {
             $this->reviews->add($review);
@@ -88,14 +52,7 @@ class Product
         return $this;
     }
 
-    /**
-     * Removes the product review.
-     *
-     * @param Review $review
-     *
-     * @return Product
-     */
-    public function removeReview(Review $review)
+    public function removeReview(Review $review): Product
     {
         if ($this->reviews->contains($review)) {
             $this->reviews->removeElement($review);
@@ -105,96 +62,48 @@ class Product
         return $this;
     }
 
-    /**
-     * Returns the product.
-     *
-     * @return ProductInterface
-     */
-    public function getProduct()
+    public function getProduct(): ?ProductInterface
     {
         return $this->product;
     }
 
-    /**
-     * Sets the product.
-     *
-     * @param ProductInterface $product
-     *
-     * @return Product
-     */
-    public function setProduct(ProductInterface $product)
+    public function setProduct(?ProductInterface $product): Product
     {
         $this->product = $product;
 
         return $this;
     }
 
-    /**
-     * Returns the number of reviews.
-     *
-     * @return int
-     */
-    public function getNbReviews()
+    public function getNbReviews(): ?int
     {
         return $this->nbReviews;
     }
 
-    /**
-     * Sets the number of reviews.
-     *
-     * @param int $count
-     *
-     * @return Product
-     */
-    public function setNbReviews($count)
+    public function setNbReviews(?int $count): Product
     {
         $this->nbReviews = $count;
 
         return $this;
     }
 
-    /**
-     * Returns the average rate.
-     *
-     * @return float
-     */
-    public function getRate()
+    public function getRate(): ?float
     {
         return $this->rate;
     }
 
-    /**
-     * Sets the average rate.
-     *
-     * @param float $rate
-     *
-     * @return Product
-     */
-    public function setRate($rate)
+    public function setRate(?float $rate): Product
     {
         $this->rate = $rate;
 
         return $this;
     }
 
-    /**
-     * Returns the "fetched at" date.
-     *
-     * @return \DateTime
-     */
-    public function getFetchedAt()
+    public function getFetchedAt(): ?DateTimeInterface
     {
         return $this->fetchedAt;
     }
 
-    /**
-     * Sets the "fetched at" date.
-     *
-     * @param \DateTime $date
-     *
-     * @return Product
-     */
-    public function setFetchedAt(\DateTime $date = null)
+    public function setFetchedAt(?DateTimeInterface $date): Product
     {
         $this->fetchedAt = $date;
 

@@ -5,6 +5,7 @@ module.exports = function (grunt, options) {
                 amd_wrapper: true,
                 amd_define: 'ekyna-verified-reviews/templates',
                 variable: 'templates',
+                // TODO ? each_template: '{{ variable }}["{{ filepath }}"] = Twig.twig({ allowInlineIncludes: true, id: "{{ filepath }}", data: {{ compiled }} });',
                 template_key: function(path) {
                     var split = path.split('/');
                     return split[split.length-1];

@@ -1,8 +1,0 @@
-ekyna_verified_reviews:
-    load_more: Afficher plus de commentaires
-    no_reviews: Nous n'avons pas encore récolté d'avis pour cet article.
-    count: "{count} avis"
-    review:
-        info: "Par {name}, le {date}"
-        anon: "Anonyme, le {date}"
-        rate: "Note : {rate}"

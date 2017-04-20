@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Command;
 
 use Ekyna\Bundle\VerifiedReviewsBundle\Service\OrderNotifier;
@@ -14,38 +16,26 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class NotifyOrderCommand extends Command
 {
-    /**
-     * @var OrderNotifier
-     */
-    private $orderNotifier;
+    protected static $defaultName = 'ekyna_verified_reviews:notify:order';
 
-    /**
-     * Sets the order notifier.
-     *
-     * @param OrderNotifier $notifier
-     */
+    private OrderNotifier $orderNotifier;
+
     public function setOrderNotifier(OrderNotifier $notifier)
     {
         $this->orderNotifier = $notifier;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function configure()
+    protected function configure(): void
     {
-        $this
-            ->setName('ekyna_verified_reviews:notify:order')
-            ->setDescription('Notify orders to verified reviews API.');
+        $this->setDescription('Notify orders to verified reviews API.');
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->writeln("<comment>Notifying orders</comment>\n");
+        $output->writeln('<comment>Notifying orders</comment>\n');
 
         $this->orderNotifier->notify($output);
+
+        return Command::SUCCESS;
     }
 }

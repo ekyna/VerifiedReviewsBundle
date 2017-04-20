@@ -1,8 +1,8 @@
 ekyna_verified_reviews_api_reviews:
     path: /api/reviews/{productId}/{page}
+    controller: Ekyna\Bundle\VerifiedReviewsBundle\Controller\ApiController::reviews
     methods: [GET]
     defaults:
-        _controller: Ekyna\Bundle\VerifiedReviewsBundle\Controller\ApiController:reviews
         page: 0
     requirements:
         productId: \d+

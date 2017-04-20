@@ -1,0 +1,17 @@
+namespaces:
+    ekyna_verified_reviews:
+        label: label
+        trans_domain: EkynaVerifiedReviews
+        prefix: /reviews
+
+resources:
+    ekyna_verified_reviews:
+        review:
+            driver: doctrine/orm
+            entity:
+                interface: Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface
+                class: Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review
+            repository:
+                interface: Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepositoryInterface
+                class: Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository
+            trans_domain: EkynaVerifiedReviews

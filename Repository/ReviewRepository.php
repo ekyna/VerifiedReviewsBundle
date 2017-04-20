@@ -1,48 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Repository;
 
+use Doctrine\ORM\Query;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
-use Ekyna\Component\Resource\Doctrine\ORM\ResourceRepository;
+use Ekyna\Component\Resource\Doctrine\ORM\Repository\ResourceRepository;
 
 /**
  * Class ReviewRepository
  * @package Ekyna\Bundle\VerifiedReviewsBundle\Repository
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class ReviewRepository extends ResourceRepository
+class ReviewRepository extends ResourceRepository implements ReviewRepositoryInterface
 {
-    /**
-     * @var \Doctrine\ORM\Query
-     */
-    private $findByProductQuery;
+    private ?Query $findByProductQuery = null;
 
-
-    /**
-     * Finds one review by its review id (id_review_product).
-     *
-     * @param string $id
-     *
-     * @return ReviewInterface|null
-     */
     public function findOneByReviewId(string $id): ?ReviewInterface
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->findOneBy([
             'reviewId' => $id,
         ]);
     }
 
-    /**
-     * Finds reviews by product.
-     *
-     * @param ProductInterface $product
-     * @param int              $limit
-     * @param int              $offset
-     *
-     * @return ReviewInterface[]
-     */
     public function findByProduct(ProductInterface $product, int $limit = 16, int $offset = 0): array
     {
         if (!$this->findByProductQuery) {

@@ -1,20 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\CommerceBundle\Model\OrderInterface;
+use Ekyna\Bundle\CommerceBundle\Service\Subject\SubjectHelperInterface;
+use Ekyna\Bundle\MediaBundle\Model\MediaInterface;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\ProductBundle\Model\ProductReferenceTypes;
 use Ekyna\Bundle\ProductBundle\Model\ProductTypes;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\OrderNotification;
 use Ekyna\Component\Commerce\Order\Model\OrderItemInterface;
 use Ekyna\Component\Commerce\Shipment\Model\ShipmentStates;
-use Ekyna\Bundle\CommerceBundle\Service\Subject\SubjectHelperInterface;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+
+use function file_get_contents;
+use function http_build_query;
+use function json_decode;
+use function json_encode;
+use function mb_strlen;
+use function sprintf;
+use function stream_context_create;
 
 /**
  * Class OrderNotifier
@@ -23,65 +38,28 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class OrderNotifier
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $manager;
+    protected EntityManagerInterface $manager;
+    protected SubjectHelperInterface $subjectHelper;
+    protected CacheManager           $cacheManager;
+    protected MailerInterface        $mailer;
+    protected string                 $orderClass;
+    protected array                  $config;
 
-    /**
-     * @var SubjectHelperInterface
-     */
-    protected $subjectHelper;
+    protected ?Query $findOrdersQuery = null;
 
-    /**
-     * @var CacheManager
-     */
-    protected $cacheManager;
-
-    /**
-     * @var \Swift_Mailer
-     */
-    protected $mailer;
-
-    /**
-     * @var string
-     */
-    protected $orderClass;
-
-    /**
-     * @var array
-     */
-    protected $config;
-
-    /**
-     * @var \Doctrine\ORM\Query
-     */
-    protected $findOrdersQuery;
-
-
-    /**
-     * Constructor.
-     *
-     * @param EntityManagerInterface $manager
-     * @param SubjectHelperInterface $subjectHelper
-     * @param CacheManager           $cacheManager
-     * @param \Swift_Mailer          $mailer
-     * @param string                 $orderClass
-     * @param array                  $config
-     */
     public function __construct(
         EntityManagerInterface $manager,
         SubjectHelperInterface $subjectHelper,
-        CacheManager $cacheManager,
-        \Swift_Mailer $mailer,
-        string $orderClass,
-        array $config = []
+        CacheManager           $cacheManager,
+        MailerInterface        $mailer,
+        string                 $orderClass,
+        array                  $config = []
     ) {
-        $this->manager       = $manager;
+        $this->manager = $manager;
         $this->subjectHelper = $subjectHelper;
-        $this->cacheManager  = $cacheManager;
-        $this->mailer        = $mailer;
-        $this->orderClass    = $orderClass;
+        $this->cacheManager = $cacheManager;
+        $this->mailer = $mailer;
+        $this->orderClass = $orderClass;
 
         $this->config = array_replace([
             'enable'       => false,
@@ -90,22 +68,21 @@ class OrderNotifier
             'secret_key'   => null,
             'debug'        => true,
             'report_email' => null,
+            'test_email'   => 'test@example.com',
         ], $config);
     }
 
     /**
      * Sends orders notifications.
-     *
-     * @param OutputInterface $output
      */
-    public function notify(OutputInterface $output)
+    public function notify(OutputInterface $output): void
     {
         if (!$this->checkConfig($output)) {
             return;
         }
 
         $report = '';
-        $limit  = $this->config['limit'];
+        $limit = $this->config['limit'];
 
         while (null !== $order = $this->findNextOrder()) {
             $name = $order->getNumber();
@@ -132,7 +109,7 @@ class OrderNotifier
             $notification = new OrderNotification();
             $notification
                 ->setOrder($order)
-                ->setNotifiedAt(new \DateTime())
+                ->setNotifiedAt(new DateTime())
                 ->setSucceed($succeed);
 
             $this->manager->persist($notification);
@@ -149,39 +126,37 @@ class OrderNotifier
             }
         }
 
-        if (!empty($report) && !empty($this->config['report_email'])) {
-            $message = \Swift_Message::newInstance();
-            $message
-                ->setFrom($this->config['report_email'])
-                ->setTo($this->config['report_email'])
-                ->setSubject('Verified review report.')
-                ->setBody($report);
-
-            $this->mailer->send($message);
+        if (empty($report) || empty($this->config['report_email'])) {
+            return;
         }
+
+        $message = new Email();
+        $message
+            ->from($this->config['report_email'])
+            ->to($this->config['report_email'])
+            ->subject('Verified review report.')
+            ->html($report);
+
+        $this->mailer->send($message);
     }
 
     /**
      * Sends order notification.
-     *
-     * @param OrderInterface $order
-     *
-     * @return bool
      */
-    protected function notifyOrder(OrderInterface $order)
+    protected function notifyOrder(OrderInterface $order): bool
     {
         // TODO Configurable (per country)
-        $url = "http://www.avis-verifies.com/index.php";
-        // $url = "http://www.verified-reviews.com/index.php";
-        // $url = "http://www.recensioni-verificate.com/index.php";
-        // $url = "http://www.opinioes-verificadas.com/index.php";
-        // $url = "http://www.recensioni-verificate.com/index.php";
-        // $url = "http://www.echte-bewertungen.com/index.php";
-        // $url = "http://www.opiniones-verificadas.com/index.php";
+        $url = 'https://www.avis-verifies.com/index.php';
+        // $url = '"'https://www.verified-reviews.com/index.php';
+        // $url = '"'https://www.recensioni-verificate.com/index.php';
+        // $url = '"'https://www.opinioes-verificadas.com/index.php';
+        // $url = '"'https://www.recensioni-verificate.com/index.php';
+        // $url = '"'https://www.echte-bewertungen.com/index.php';
+        // $url = '"'https://www.opiniones-verificadas.com/index.php';
 
         $acceptedAt = $order->getAcceptedAt()->format('Y-m-d H:i:s');
         if ($this->config['debug']) {
-            $email = 'support@ekyna.com';
+            $email = $this->config['test_email'];
             $delay = '0';
         } else {
             $email = $order->getEmail();
@@ -204,7 +179,7 @@ class OrderNotifier
             $this->buildProducts($item, $data['PRODUCTS']);
         }
 
-        $data['sign'] = SHA1(
+        $data['sign'] = sha1(
             $data['query'] .
             $data['order_ref'] .
             $data['email'] .
@@ -215,12 +190,10 @@ class OrderNotifier
             $this->config['secret_key']
         );
 
-        $encrypted = http_build_query(
-            [
-                'idWebsite' => $this->config['website_id'],
-                'message'   => json_encode($data),
-            ]
-        );
+        $encrypted = http_build_query([
+            'idWebsite' => $this->config['website_id'],
+            'message'   => json_encode($data),
+        ]);
 
         $post = [
             'http' => [
@@ -241,11 +214,8 @@ class OrderNotifier
 
     /**
      * Builds the product and its children data.
-     *
-     * @param OrderItemInterface $item
-     * @param array              $list
      */
-    protected function buildProducts(OrderItemInterface $item, array &$list)
+    protected function buildProducts(OrderItemInterface $item, array &$list): void
     {
         if ($item->isPrivate()) {
             return;
@@ -269,12 +239,8 @@ class OrderNotifier
 
     /**
      * Builds the product data.
-     *
-     * @param ProductInterface $product
-     *
-     * @return array|null
      */
-    protected function buildProduct(ProductInterface $product)
+    protected function buildProduct(ProductInterface $product): ?array
     {
         $data = [
             'id_product'   => $product->getReference(), // Required - Product Id
@@ -286,7 +252,7 @@ class OrderNotifier
             $data['url_product'] = $url;
         }
 
-        /** @var \Ekyna\Bundle\MediaBundle\Model\MediaInterface $image */
+        /** @var MediaInterface $image */
         if ($image = $product->getImages(true, 1)->first()) {
             $data['url_product_image'] = $this->cacheManager->getBrowserPath($image->getPath(), 'media_front');
         }
@@ -308,7 +274,7 @@ class OrderNotifier
             // 'MPN'
         }
 
-        $data['sku']        = $product->getReference();
+        $data['sku'] = $product->getReference();
         $data['brand_name'] = $product->getBrand()->getTitle();
 
         return $data;
@@ -316,10 +282,8 @@ class OrderNotifier
 
     /**
      * Returns the next order to notify.
-     *
-     * @return OrderInterface
      */
-    protected function findNextOrder()
+    protected function findNextOrder(): ?OrderInterface
     {
         if (!$this->findOrdersQuery) {
             $ex = new Expr();
@@ -343,7 +307,7 @@ class OrderNotifier
                 ->useQueryCache(true);
         }
 
-        $date = (new \DateTime('-1 month'))->setTime(0, 0, 0, 0);
+        $date = (new DateTime('-1 month'))->setTime(0, 0);
 
         return $this->findOrdersQuery
             ->setParameter('date', $date, Types::DATE_MUTABLE)
@@ -353,33 +317,29 @@ class OrderNotifier
 
     /**
      * Checks the configuration.
-     *
-     * @param OutputInterface $output
-     *
-     * @return bool
      */
-    protected function checkConfig(OutputInterface $output)
+    protected function checkConfig(OutputInterface $output): bool
     {
         if (!$this->config['enable']) {
-            $output->writeln("<error>Order notification is disabled</error>");
+            $output->writeln('<error>Order notification is disabled</error>');
 
             return false;
         }
 
         if (empty($this->config['website_id'])) {
-            $output->writeln("<error>Website id is not configured</error>");
+            $output->writeln('<error>Website id is not configured</error>');
 
             return false;
         }
 
         if (empty($this->config['secret_key'])) {
-            $output->writeln("<error>Secret key is not configured</error>");
+            $output->writeln('<error>Secret key is not configured</error>');
 
             return false;
         }
 
         if ($this->config['debug']) {
-            $output->writeln("<comment>Debug mode: notification won't be sent.\n</comment>");
+            $output->writeln('<comment>Debug mode: notification won\'t be sent.</comment>');
         }
 
         return true;

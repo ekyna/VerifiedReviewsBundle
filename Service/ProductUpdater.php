@@ -1,14 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\ProductBundle\Repository\ProductRepositoryInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
+use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+use function implode;
+use function json_decode;
+use function sprintf;
+use function str_split;
+use function substr;
+use function urldecode;
 
 /**
  * Class ProductUpdater
@@ -17,37 +27,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class ProductUpdater
 {
-    const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/AVERAGE/all_products.json';
+    private const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/AVERAGE/all_products.json';
 
-    /**
-     * @var ProductRepositoryInterface
-     */
-    protected $productProductRepository;
+    protected ProductRepositoryInterface $productProductRepository;
+    protected ValidatorInterface $validator;
+    protected EntityManagerInterface $manager;
+    protected ?string $websiteId;
 
-    /**
-     * @var ValidatorInterface
-     */
-    protected $validator;
-
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $manager;
-
-    /**
-     * @var string
-     */
-    protected $websiteId;
-
-
-    /**
-     * Constructor.
-     *
-     * @param ProductRepositoryInterface $productProductRepository
-     * @param ValidatorInterface         $validator
-     * @param EntityManagerInterface     $manager
-     * @param string                     $websiteId
-     */
     public function __construct(
         ProductRepositoryInterface $productProductRepository,
         ValidatorInterface $validator,
@@ -65,7 +51,7 @@ class ProductUpdater
      *
      * @return bool Whether it succeed.
      */
-    public function updateProducts()
+    public function updateProducts(): bool
     {
         if (empty($this->websiteId)) {
             return false;
@@ -76,7 +62,7 @@ class ProductUpdater
         $path = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
 
         try {
-            $res = $client->get(sprintf(static::URL, $path));
+            $res = $client->get(sprintf(self::URL, $path));
         } /** @noinspection PhpRedundantCatchClauseInspection */ catch (GuzzleException $e) {
             return false;
         }
@@ -86,18 +72,18 @@ class ProductUpdater
             return false;
         }
 
-        $data = json_decode($res->getBody(), true);
+        $data = json_decode($res->getBody()->getContents(), true);
 
         if (empty($data)) {
             return true;
         }
 
-        /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository $reviewProductRepository */
+        /** @var ProductRepository $reviewProductRepository */
         $reviewProductRepository = $this->manager->getRepository(Product::class);
 
         $count = 0;
         foreach ($data as $datum) {
-            if (!$productProduct = $this->findProduct(urldecode($datum['id_product']))) {
+            if (!$productProduct = $this->findProduct((int)urldecode($datum['id_product']))) {
                 continue;
             }
 
@@ -136,12 +122,9 @@ class ProductUpdater
     /**
      * Updates the review product.
      *
-     * @param Product $product
-     * @param array   $data
-     *
      * @return bool Whether the review product as been updated.
      */
-    protected function updateProduct(Product $product, array $data)
+    protected function updateProduct(Product $product, array $data): bool
     {
         $changed = false;
 
@@ -160,14 +143,9 @@ class ProductUpdater
 
     /**
      * Finds the product by verified reviews reference.
-     *
-     * @param string $idProduct
-     *
-     * @return ProductInterface|null
      */
-    protected function findProduct($idProduct)
+    protected function findProduct(int $idProduct): ?ProductInterface
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->productProductRepository->findOneBy([
             'reference' => $idProduct,
         ]);

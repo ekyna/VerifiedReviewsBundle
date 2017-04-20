@@ -1,32 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\DependencyInjection;
 
-use Ekyna\Bundle\ResourceBundle\DependencyInjection\AbstractExtension;
-use Ekyna\Bundle\VerifiedReviewsBundle\Service;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
 /**
  * Class EkynaVerifiedReviewsExtension
  * @package Ekyna\Bundle\VerifiedReviewsBundle\DependencyInjection
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class EkynaVerifiedReviewsExtension extends AbstractExtension
+class EkynaVerifiedReviewsExtension extends Extension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
-        $config = $this->configure($configs, 'ekyna_verified_reviews', new Configuration(), $container);
+        $config = $this->processConfiguration(new Configuration(), $configs);
 
-        $definition = $container->getDefinition(Service\ProductUpdater::class);
-        $definition->setArgument(3, $config['credential']['website_id']);
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader->load('services.php');
 
-        $definition = $container->getDefinition(Service\ReviewUpdater::class);
-        $definition->setArgument(3, $config['credential']['website_id']);
+        $definition = $container->getDefinition('ekyna_verified_reviews.updater.product');
+        $definition->replaceArgument(3, $config['credential']['website_id']);
 
-        $definition = $container->getDefinition(Service\OrderNotifier::class);
+        $definition = $container->getDefinition('ekyna_verified_reviews.updater.review');
+        $definition->replaceArgument(4, $config['credential']['website_id']);
+
+        $definition = $container->getDefinition('ekyna_verified_reviews.notifier.order');
         $definition->setArgument(5, [
             'enable'       => $config['notification']['enable'],
             'delay'        => $config['notification']['delay'],
@@ -37,7 +40,7 @@ class EkynaVerifiedReviewsExtension extends AbstractExtension
             'debug'        => $container->getParameter('kernel.debug'),
         ]);
 
-        $definition = $container->getDefinition(Service\Renderer\ReviewRenderer::class);
+        $definition = $container->getDefinition('ekyna_verified_reviews.renderer.review');
         $definition->setArgument(5, $config['layout']);
     }
 }

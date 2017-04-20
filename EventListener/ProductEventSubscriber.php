@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\EventListener;
 
 use Ekyna\Bundle\CmsBundle\Event\SchemaOrgEvent;
 use Ekyna\Bundle\ProductBundle\Event\ProductEvents;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository;
+use InvalidArgumentException;
 use Spatie\SchemaOrg\Product;
 use Spatie\SchemaOrg\Schema;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -17,37 +20,23 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class ProductEventSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var ProductRepository
-     */
-    private $productRepository;
+    private ProductRepository $productRepository;
 
-
-    /**
-     * Constructor.
-     *
-     * @param ProductRepository $productRepository
-     */
     public function __construct(ProductRepository $productRepository)
     {
         $this->productRepository = $productRepository;
     }
 
-    /**
-     * Product schema org handler.
-     *
-     * @param SchemaOrgEvent $event
-     */
-    public function onProductSchemaOrg(SchemaOrgEvent $event)
+    public function onProductSchemaOrg(SchemaOrgEvent $event): void
     {
         $product = $event->getResource();
         if (!$product instanceof ProductInterface) {
-            throw new \InvalidArgumentException("Expected instance of " . ProductInterface::class);
+            throw new InvalidArgumentException('Expected instance of ' . ProductInterface::class);
         }
 
         $schema = $event->getSchema();
         if (!$schema instanceof Product) {
-            throw new \InvalidArgumentException("Expected instance of " . Product::class);
+            throw new InvalidArgumentException('Expected instance of ' . Product::class);
         }
 
         /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product $p */
@@ -65,10 +54,7 @@ class ProductEventSubscriber implements EventSubscriberInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             ProductEvents::SCHEMA_ORG => ['onProductSchemaOrg', 0],

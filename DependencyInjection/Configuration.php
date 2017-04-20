@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -13,28 +15,23 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('ekyna_verified_reviews');
+        $treeBuilder = new TreeBuilder('ekyna_verified_reviews');
+
+        $rootNode = $treeBuilder->getRootNode();
 
         $this->addCredentialSection($rootNode);
         $this->addNotificationSection($rootNode);
         $this->addLayoutSection($rootNode);
-        $this->addPoolsSection($rootNode);
 
         return $treeBuilder;
     }
 
     /**
      * Adds the `credential` section.
-     *
-     * @param ArrayNodeDefinition $node
      */
-    private function addCredentialSection(ArrayNodeDefinition $node)
+    private function addCredentialSection(ArrayNodeDefinition $node): void
     {
         $node
             ->children()
@@ -50,10 +47,8 @@ class Configuration implements ConfigurationInterface
 
     /**
      * Adds the `notification` section.
-     *
-     * @param ArrayNodeDefinition $node
      */
-    private function addNotificationSection(ArrayNodeDefinition $node)
+    private function addNotificationSection(ArrayNodeDefinition $node): void
     {
         $node
             ->children()
@@ -83,10 +78,8 @@ class Configuration implements ConfigurationInterface
 
     /**
      * Adds the `layout` section.
-     *
-     * @param ArrayNodeDefinition $node
      */
-    private function addLayoutSection(ArrayNodeDefinition $node)
+    private function addLayoutSection(ArrayNodeDefinition $node): void
     {
         $node
             ->children()
@@ -108,34 +101,5 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
-    }
-
-    /**
-     * Adds the `pools` section.
-     *
-     * @param ArrayNodeDefinition $node
-     */
-    private function addPoolsSection(ArrayNodeDefinition $node)
-    {
-        $node
-            ->children()
-                ->arrayNode('pools')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->arrayNode('review')
-                            ->addDefaultsIfNotSet()
-                            ->children()
-                                ->scalarNode('entity')
-                                    ->defaultValue('Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review')
-                                ->end()
-                                ->scalarNode('repository')
-                                    ->defaultValue('Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository')
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
-            ->end()
-        ;
     }
 }

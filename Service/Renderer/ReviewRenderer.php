@@ -1,76 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer;
 
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Templating\EngineInterface;
-use Symfony\Component\Translation\TranslatorInterface;
-use Twig\Extension\RuntimeExtensionInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
+
+use function array_replace;
 
 /**
  * Class ReviewRenderer
  * @package Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class ReviewRenderer implements RuntimeExtensionInterface
+class ReviewRenderer
 {
-    /**
-     * @var ProductRepository
-     */
-    private $productRepository;
+    private ProductRepository   $productRepository;
+    private ReviewRepository    $reviewRepository;
+    private NormalizerInterface $normalizer;
+    private TranslatorInterface $translator;
+    private Environment         $twig;
+    private array               $config;
 
-    /**
-     * @var ReviewRepository
-     */
-    private $reviewRepository;
-
-    /**
-     * @var NormalizerInterface
-     */
-    private $normalizer;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    /**
-     * @var EngineInterface
-     */
-    private $templating;
-
-    /**
-     * @var array
-     */
-    private $config;
-
-
-    /**
-     * Constructor.
-     *
-     * @param ProductRepository   $productRepository
-     * @param ReviewRepository    $reviewRepository
-     * @param NormalizerInterface $normalizer
-     * @param TranslatorInterface $translator
-     * @param EngineInterface     $templating
-     * @param array               $config
-     */
     public function __construct(
-        ProductRepository $productRepository,
-        ReviewRepository $reviewRepository,
+        ProductRepository   $productRepository,
+        ReviewRepository    $reviewRepository,
         NormalizerInterface $normalizer,
         TranslatorInterface $translator,
-        EngineInterface $templating,
-        array $config = []
+        Environment         $twig,
+        array               $config = []
     ) {
         $this->productRepository = $productRepository;
         $this->reviewRepository = $reviewRepository;
         $this->normalizer = $normalizer;
         $this->translator = $translator;
-        $this->templating = $templating;
+        $this->twig = $twig;
 
         $this->config = array_replace([
             'columns' => 2,
@@ -81,13 +50,8 @@ class ReviewRenderer implements RuntimeExtensionInterface
 
     /**
      * Renders the product count and stars.
-     *
-     * @param ProductInterface $subject
-     * @param array            $params
-     *
-     * @return string
      */
-    public function renderProduct(ProductInterface $subject, array $params = [])
+    public function renderProduct(ProductInterface $subject, array $params = []): string
     {
         $product = $this->productRepository->findOneByProduct($subject);
 
@@ -105,15 +69,8 @@ class ReviewRenderer implements RuntimeExtensionInterface
             $params['tag'] = 'a';
         }
 
-        $count = $this->translator->trans(
-            'ekyna_verified_reviews.count',
-            ['{count}' => $product->getNbReviews()]
-        );
-
-        $rate = $this->translator->trans(
-            'ekyna_verified_reviews.review.rate',
-            ['{rate}' => $product->getRate()]
-        );
+        $count = $this->translator->trans('count', ['{count}' => $product->getNbReviews()], 'EkynaVerifiedReviews');
+        $rate = $this->translator->trans('review.rate', ['{rate}' => $product->getRate()], 'EkynaVerifiedReviews');
 
         $width = ($this->config['width'] / 5 * $product->getRate()) . 'px';
 
@@ -122,29 +79,25 @@ class ReviewRenderer implements RuntimeExtensionInterface
         return '<' . $params['tag'] . $href . ' class="' . $params['class'] . '">' .
             $count .
             '<span class="verified-review-rate" title="' . $rate . '">' .
-                '<i>' . $rate . '</i>' .
-                '<i style="width: ' . $width . '"></i>' .
+            '<i>' . $rate . '</i>' .
+            '<i style="width: ' . $width . '"></i>' .
             '</span>' .
-        '</' . $params['tag'] . '>';
+            '</' . $params['tag'] . '>';
     }
 
     /**
      * Renders the product reviews.
-     *
-     * @param ProductInterface $subject
-     *
-     * @return string
      */
-    public function renderReviews(ProductInterface $subject)
+    public function renderReviews(ProductInterface $subject): string
     {
         $product = $this->productRepository->findOneByProduct($subject);
 
         $reviews = $this->fetchReviews($subject);
 
         $translations = [
-            'info' => $this->translator->trans('ekyna_verified_reviews.review.info'),
-            'anon' => $this->translator->trans('ekyna_verified_reviews.review.anon'),
-            'rate' => $this->translator->trans('ekyna_verified_reviews.review.rate'),
+            'info' => $this->translator->trans('review.info', [], 'EkynaVerifiedReviews'),
+            'anon' => $this->translator->trans('review.anon', [], 'EkynaVerifiedReviews'),
+            'rate' => $this->translator->trans('review.rate', [], 'EkynaVerifiedReviews'),
         ];
 
         $config = array_replace($this->config, [
@@ -152,7 +105,7 @@ class ReviewRenderer implements RuntimeExtensionInterface
             'trans' => $translations,
         ]);
 
-        return $this->templating->render('@EkynaVerifiedReviews/reviews.html.twig', [
+        return $this->twig->render('@EkynaVerifiedReviews/reviews.html.twig', [
             'product' => $product,
             'config'  => $config,
             'reviews' => $reviews,
@@ -160,14 +113,9 @@ class ReviewRenderer implements RuntimeExtensionInterface
     }
 
     /**
-     * Fetches the reviws for the given page number.
-     *
-     * @param ProductInterface $product
-     * @param int              $page
-     *
-     * @return array
+     * Fetches the reviews for the given page number.
      */
-    public function fetchReviews(ProductInterface $product, int $page = 0)
+    public function fetchReviews(ProductInterface $product, int $page = 0): array
     {
         $perPage = $this->config['columns'] * $this->config['rows'];
 

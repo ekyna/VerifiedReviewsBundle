@@ -1,4 +1,4 @@
-{% spaceless %}
+{% apply spaceless %}
 <div>
 {% for r in reviews %}
     {% if loop.first %}<div class="row">{% elseif loop.index0 % config.columns == 0 %}<div class="row">{% endif %}
@@ -28,4 +28,4 @@
     {% if loop.last %}</div>{% elseif loop.index % config.columns == 0 %}</div>{% endif %}
 {% endfor %}
 </div>
-{% endspaceless %}
+{% endapply %}

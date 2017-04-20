@@ -1,17 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
 use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review;
-use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
+use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepositoryInterface;
+use Ekyna\Component\Resource\Factory\ResourceFactoryInterface;
+use Exception;
 use GuzzleHttp\Client;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+use Throwable;
+
+use function implode;
+use function in_array;
+use function json_decode;
+use function preg_match;
+use function preg_replace;
+use function sprintf;
+use function str_split;
+use function substr;
+use function trim;
+use function urlencode;
 
 /**
  * Class ReviewUpdater
@@ -20,54 +38,27 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class ReviewUpdater
 {
-    const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/REVIEWS/';
+    private const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/REVIEWS/';
 
-    /**
-     * @var ReviewRepository
-     */
-    protected $reviewRepository;
+    protected ReviewRepositoryInterface $reviewRepository;
+    protected ResourceFactoryInterface  $reviewFactory;
+    protected ValidatorInterface        $validator;
+    protected EntityManagerInterface    $manager;
+    protected ?string                   $websiteId;
 
-    /**
-     * @var ValidatorInterface
-     */
-    protected $validator;
-
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $manager;
-
-    /**
-     * @var string
-     */
-    protected $websiteId;
-
-    /**
-     * @var \Doctrine\ORM\Query
-     */
-    protected $nextProductQuery;
-
-    /**
-     * @var Client
-     */
-    protected $client;
+    protected ?Query  $nextProductQuery = null;
+    protected ?Client $client           = null;
 
 
-    /**
-     * Constructor.
-     *
-     * @param ReviewRepository       $reviewRepository
-     * @param ValidatorInterface     $validator
-     * @param EntityManagerInterface $manager
-     * @param string                 $websiteId
-     */
     public function __construct(
-        ReviewRepository $reviewRepository,
-        ValidatorInterface $validator,
-        EntityManagerInterface $manager,
-        string $websiteId = null
+        ReviewRepositoryInterface $reviewRepository,
+        ResourceFactoryInterface  $reviewFactory,
+        ValidatorInterface        $validator,
+        EntityManagerInterface    $manager,
+        string                    $websiteId = null
     ) {
         $this->reviewRepository = $reviewRepository;
+        $this->reviewFactory = $reviewFactory;
         $this->validator = $validator;
         $this->manager = $manager;
         $this->websiteId = $websiteId;
@@ -76,11 +67,11 @@ class ReviewUpdater
     /**
      * Updates the review product list.
      *
-     * @param bool $full Whether to fetch all reviews (default is to stop when a review is older that 30 days, by product)
+     * @param bool $full Whether to fetch all reviews (default is to stop when a review is older than 30 days, by product)
      *
      * @return bool Whether it succeed.
      */
-    public function updateReviews(bool $full = false)
+    public function updateReviews(bool $full = false): bool
     {
         if (empty($this->websiteId)) {
             return false;
@@ -91,8 +82,9 @@ class ReviewUpdater
         }
 
         $directory = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
+
         $this->client = new Client([
-            'base_uri' => sprintf(static::URL, $directory),
+            'base_uri' => sprintf(self::URL, $directory),
         ]);
 
         $count = 0;
@@ -114,7 +106,7 @@ class ReviewUpdater
 
                     if (!$review) {
                         /** @var Review $review */
-                        $review = $this->reviewRepository->createNew();
+                        $review = $this->reviewFactory->create();
                         $review
                             ->setReviewId($reviewId)
                             ->setProduct($product);
@@ -151,12 +143,9 @@ class ReviewUpdater
     /**
      * Updates the review.
      *
-     * @param Review $review
-     * @param array  $data
-     *
      * @return bool Whether the review has been updated.
      */
-    protected function updateReview(Review $review, array $data)
+    protected function updateReview(Review $review, array $data): bool
     {
         $changed = false;
 
@@ -229,12 +218,8 @@ class ReviewUpdater
 
     /**
      * Sanitizes the given string.
-     *
-     * @param string|null $string
-     *
-     * @return null|string
      */
-    protected function sanitizeString(string $string = null)
+    protected function sanitizeString(string $string = null): ?string
     {
         $string = trim($string);
 
@@ -243,18 +228,14 @@ class ReviewUpdater
 
     /**
      * Fetch the product reviews JSON data.
-     *
-     * @param Product $product
-     *
-     * @return array|null
      */
-    protected function loadReviewsJson(Product $product)
+    protected function loadReviewsJson(Product $product): ?array
     {
         $file = urlencode($product->getProduct()->getReference()) . '.json';
 
         try {
             $res = $this->client->request('GET', $file);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return null;
         }
 
@@ -263,26 +244,22 @@ class ReviewUpdater
             return null;
         }
 
-        return json_decode($res->getBody(), true);
+        return json_decode($res->getBody()->getContents(), true);
     }
 
     /**
      * Parse the comment date.
-     *
-     * @param string $input
-     *
-     * @return DateTime
      */
     protected function parseCommentDate(string $input): DateTime
     {
         try {
             return new DateTime($input);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
         }
 
         $regex = '~^(?P<date>[0-9\-]+)T(?P<time>[0-9\:]{8})\.0000000 (?P<zone>[0-9\-\+\:]+)$~';
         if (!preg_match($regex, $input, $matches)) {
-            throw new \Exception("Failed to parse date time string.");
+            throw new Exception('Failed to parse date time string.');
         }
 
         /*$date = "{$matches['date']}T{$matches['time']}" . ($matches['zone'][0] === '-' ? '' : '+') . $matches['zone'];
@@ -295,8 +272,6 @@ class ReviewUpdater
 
     /**
      * Finds the product to fetch.
-     *
-     * @return Product|null
      */
     protected function findNextProduct(): ?Product
     {
@@ -330,27 +305,22 @@ class ReviewUpdater
         /** @noinspection SqlResolve */
         $this
             ->manager
-            ->createQuery(sprintf(
-                "UPDATE %s p SET p.fetchedAt=NULL",
-                Product::class))
+            ->createQuery(sprintf('UPDATE %s p SET p.fetchedAt=NULL', Product::class))
             ->execute();
     }
 
     /**
      * Removes UTF8 4 bytes characters.
      * (Such characters would need a utf8mb4 mysql charset and collation)
-     *
-     * @param string $string
-     *
-     * @return string
      */
     private function remove4BytesChars(string $string): string
     {
         // https://stackoverflow.com/a/16496799
+        /** @noinspection RegExpUnnecessaryNonCapturingGroup */
         return preg_replace('%(?:
           \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
           | [\xF1-\xF3][\x80-\xBF]{3}        # planes 4-15
           | \xF4[\x80-\x8F][\x80-\xBF]{2}    # plane 16
-        )%xs', "", $string);
+        )%xs', '', $string);
     }
 }

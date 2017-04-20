@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Twig;
 
 use Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer\ReviewRenderer;
@@ -13,10 +15,7 @@ use Twig\TwigFilter;
  */
 class ReviewExtension extends AbstractExtension
 {
-    /**
-     * @inheritdoc
-     */
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter(

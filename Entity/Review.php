@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
 
-use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
@@ -14,259 +16,142 @@ use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
  */
 class Review implements ReviewInterface
 {
-    /**
-     * @var int
-     */
-    protected $id;
+    protected ?int               $id          = null;
+    protected ?Product           $product     = null;
+    protected ?string            $reviewId    = null; // product_review_id
+    protected ?string            $email       = null;
+    protected ?string            $lastName    = null; // lastname
+    protected ?string            $firstName   = null; // firstname
+    protected ?DateTimeInterface $date        = null; // review_date
+    protected ?string            $content     = null; // review
+    protected ?int               $rate        = null;
+    protected ?string            $orderNumber = null; // order_ref
+    /** @var Collection<Comment> */
+    protected Collection $comments;
 
-    /**
-     * @var Product
-     */
-    protected $product;
-
-    /**
-     * (product_review_id)
-     * @var string
-     */
-    protected $reviewId;
-
-    /**
-     * @var string
-     */
-    protected $email;
-
-    /**
-     * (lastname)
-     * @var string
-     */
-    protected $lastName;
-
-    /**
-     * (firstname)
-     * @var string
-     */
-    protected $firstName;
-
-    /**
-     * (review_date)
-     * @var \DateTime
-     */
-    protected $date;
-
-    /**
-     * (review)
-     * @var string
-     */
-    protected $content;
-
-    /**
-     * @var int
-     */
-    protected $rate;
-
-    /**
-     * (order_ref)
-     * @var string
-     */
-    protected $orderNumber;
-
-    /**
-     * @var Collection|Comment[]
-     */
-    protected $comments;
-
-
-    /**
-     * Constructor.
-     */
     public function __construct()
     {
         $this->comments = new ArrayCollection();
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getProduct(): ?Product
     {
         return $this->product;
     }
 
-    /**
-     * @param Product $product
-     *
-     * @return $this
-     */
-    public function setProduct(Product $product): ReviewInterface
+    public function setProduct(?Product $product): ReviewInterface
     {
         $this->product = $product;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getReviewId(): ?string
     {
         return $this->reviewId;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setReviewId(string $id): ReviewInterface
+    public function setReviewId(?string $id): ReviewInterface
     {
         $this->reviewId = $id;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setEmail(string $email = null): ReviewInterface
+    public function setEmail(?string $email): ReviewInterface
     {
         $this->email = $email;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getLastName(): ?string
     {
         return $this->lastName;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setLastName(string $name = null): ReviewInterface
+    public function setLastName(?string $name): ReviewInterface
     {
         $this->lastName = $name;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getFirstName(): ?string
     {
         return $this->firstName;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setFirstName(string $name = null): ReviewInterface
+    public function setFirstName(?string $name): ReviewInterface
     {
         $this->firstName = $name;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getDate(): ?DateTime
+    public function getDate(): ?DateTimeInterface
     {
         return $this->date;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setDate(DateTime $date): ReviewInterface
+    public function setDate(?DateTimeInterface $date): ReviewInterface
     {
         $this->date = $date;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getContent(): ?string
     {
         return $this->content;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setContent(string $content): ReviewInterface
+    public function setContent(?string $content): ReviewInterface
     {
         $this->content = $content;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getRate(): ?int
     {
         return $this->rate;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setRate(int $rate): ReviewInterface
+    public function setRate(?int $rate): ReviewInterface
     {
         $this->rate = $rate;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getOrderNumber(): ?string
     {
         return $this->orderNumber;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setOrderNumber(string $number): ReviewInterface
+    public function setOrderNumber(?string $number): ReviewInterface
     {
         $this->orderNumber = $number;
 
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getComments(): Collection
     {
         return $this->comments;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function addComment(Comment $comment): ReviewInterface
     {
         if (!$this->comments->contains($comment)) {
@@ -277,9 +162,6 @@ class Review implements ReviewInterface
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function removeComment(Comment $comment): ReviewInterface
     {
         if ($this->comments->contains($comment)) {

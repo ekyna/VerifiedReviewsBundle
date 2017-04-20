@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Controller;
 
+use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Bundle\ProductBundle\Repository\ProductRepositoryInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer\ReviewRenderer;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,23 +19,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class ApiController
 {
-    /**
-     * @var ProductRepositoryInterface
-     */
-    private $productRepository;
+    private ProductRepositoryInterface $productRepository;
+    private ReviewRenderer $renderer;
 
-    /**
-     * @var ReviewRenderer
-     */
-    private $renderer;
-
-
-    /**
-     * Constructor.
-     *
-     * @param ProductRepositoryInterface $productRepository
-     * @param ReviewRenderer             $renderer
-     */
     public function __construct(ProductRepositoryInterface $productRepository, ReviewRenderer $renderer)
     {
         $this->productRepository = $productRepository;
@@ -41,21 +30,17 @@ class ApiController
 
     /**
      * Reviews actions.
-     *
-     * @param Request $request
-     *
-     * @return Response
      */
-    public function reviews(Request $request)
+    public function reviews(Request $request): Response
     {
-        $id = $request->attributes->get('productId');
+        $id = $request->attributes->getInt('productId');
 
-        /** @var \Ekyna\Bundle\ProductBundle\Model\ProductInterface $product */
-        if (!$product = $this->productRepository->find($id)) {
-            throw new NotFoundHttpException("Product not found.");
+        /** @var ProductInterface $product */
+        if (null === $product = $this->productRepository->find($id)) {
+            throw new NotFoundHttpException('Product not found.');
         }
 
-        $page = $request->attributes->get('page');
+        $page = $request->attributes->getInt('page');
 
         $reviews = $this->renderer->fetchReviews($product, $page);
 

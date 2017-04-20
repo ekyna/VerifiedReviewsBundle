@@ -1,13 +1,13 @@
-{% spaceless %}
+{% apply spaceless %}
 <div id="verified-reviews" data-config='{{ config|json_encode|raw }}'>
     {% if reviews is empty %}
         <div class="alert alert-info">
-            {{- 'ekyna_verified_reviews.no_reviews'|trans -}}
+            {{- 'no_reviews'|trans({}, 'EkynaVerifiedReviews') -}}
         </div>
     {% else %}
         {% if product %}
         <div class="verified-reviews-header">
-            {{ 'ekyna_verified_reviews.count'|trans({'{count}': product.nbReviews}) }}
+            {{ 'count'|trans({'{count}': product.nbReviews}, 'EkynaVerifiedReviews') }}
             <span class="verified-review-rate" title="{{ config.trans.rate|replace({'{rate}': product.rate}) }}">
                 <i>{{ config.trans.rate|replace({'{rate}': product.rate}) }}</i>
                 <i style="width: {{ config.width / 5 * product.rate }}px"></i>
@@ -24,11 +24,11 @@
         <div class="verified-reviews-footer">
             <button class="btn btn-xs btn-primary" disabled="disabled">
                 <i class="fa fa-comments-o"></i>
-                {{- 'ekyna_verified_reviews.load_more'|trans -}}
+                {{- 'load_more'|trans({}, 'EkynaVerifiedReviews') -}}
             </button>
         </div>
         {% endif %}
     {% endif %}
 </div>
 <script async type="text/javascript">require(['ekyna-verified-reviews']);</script>
-{% endspaceless %}
+{% endapply %}

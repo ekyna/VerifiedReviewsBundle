@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Command;
 
 use Ekyna\Bundle\VerifiedReviewsBundle\Service\ProductUpdater;
@@ -16,42 +18,30 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpdateProductCommand extends Command
 {
-    /**
-     * @var ProductUpdater
-     */
-    private $productUpdater;
+    protected static $defaultName = 'ekyna_verified_reviews:update:product';
 
+    private ProductUpdater $productUpdater;
 
-    /**
-     * Sets the product updater.
-     *
-     * @param ProductUpdater $updater
-     */
     public function setProductUpdater(ProductUpdater $updater)
     {
         $this->productUpdater = $updater;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function configure()
+    protected function configure(): void
     {
-        $this
-            ->setName('ekyna_verified_reviews:update:product')
-            ->setDescription('Update the verified reviews products.');
+        $this->setDescription('Update the verified reviews products.');
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->write('<comment>Updating product list</comment> ... ');
+
         if ($this->productUpdater->updateProducts()) {
             $output->write('<info>success</info>');
         } else {
             $output->write('<error>failure</error>');
         }
+
+        return Command::SUCCESS;
     }
 }

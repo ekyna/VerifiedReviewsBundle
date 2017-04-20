@@ -5,7 +5,7 @@
     "authors": [
         {
             "name": "Etienne Dauvergne",
-            "homepage": "http://ekyna.com"
+            "homepage": "https://ekyna.com"
         }
     ],
     "keywords": [
@@ -16,8 +16,8 @@
     "homepage": "https://github.com/ekyna/VerifiedReviewsBundle",
     "license": "MIT",
     "require": {
-        "php": ">=7.2",
-        "ekyna/product-bundle": "0.7.x-dev"
+        "php": ">=7.4",
+        "ekyna/product-bundle": "0.8.x-dev"
     },
     "autoload": {
         "psr-4": {
