@@ -1,0 +1,6 @@
+config:
+    packages:
+        -
+            name: 'ekyna-verified-reviews'
+            location: 'bundles/ekynaverifiedreviews/js'
+            main: 'reviews'

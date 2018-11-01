@@ -1,0 +1,27 @@
+{
+    "name": "ekyna/verified-reviews-bundle",
+    "description": "Verified reviews for ekyna/product-bundle",
+    "type": "symfony-bundle",
+    "authors": [
+        {
+            "name": "Etienne Dauvergne",
+            "homepage": "http://ekyna.com"
+        }
+    ],
+    "keywords": [
+        "symfony",
+        "verified reviews",
+        "bundle"
+    ],
+    "homepage": "https://github.com/ekyna/VerifiedReviewsBundle",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.2",
+        "ekyna/product-bundle": "0.7.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ekyna\\Bundle\\VerifiedReviewsBundle\\": ""
+        }
+    }
+}

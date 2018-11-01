@@ -1,0 +1,103 @@
+#verified-reviews {
+    margin-bottom: 20px;
+
+    .verified-review-rate {
+        background-color: #ccc;
+        display: inline-block;
+        height: 18px;
+        overflow: hidden;
+        position: relative;
+        width: 90px;
+
+        > i:first-child {
+            //noinspection CssUnknownTarget
+            background: url('/bundles/ekynaverifiedreviews/img/stars.png') no-repeat 0 0 scroll;
+            display: block;
+            height: 100%;
+            left: 0;
+            position: absolute;
+            text-indent: 100px;
+            top: 0;
+            width: 100%;
+        }
+
+        > i:last-child {
+            background-color: #ff890e;
+            display: block;
+            height: 100%;
+            width: 100%;
+        }
+    }
+
+    .verified-reviews-header {
+        background-color: #e5e5e5;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        padding: 9px 12px;
+        text-align: center;
+
+        > .verified-review-rate {
+            margin-left: 12px;
+            vertical-align: text-bottom;
+        }
+    }
+
+    .verified-reviews-body {
+        margin-bottom: 12px;
+    }
+
+    .verified-reviews-footer {
+        margin-bottom: 15px;
+        text-align: center;
+
+        > button > i {
+            margin-right: 6px;
+        }
+    }
+
+    .verified-review {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+
+        > p {
+            margin: 0;
+            padding: 9px 12px;
+
+            &:first-child {
+                //noinspection CssUnknownTarget
+                background: #e5e5e5 url('/bundles/ekynaverifiedreviews/img/bubble.png') no-repeat 6px bottom scroll;
+                padding-left: 32px;
+                padding-top: 8px;
+
+
+                > span:first-child {
+                    color: #666;
+                    font-style: italic;
+                }
+
+                > span.verified-review-rate {
+                    float: right;
+                }
+            }
+
+            &.comment {
+                border-top: 1px dotted #f0f0f0;
+                border-radius: 2px;
+                margin: 0 12px;
+
+                > em {
+                    font-size: 13px;
+                    color: #777;
+                }
+
+                &.website {
+                    border: none;
+                    background: #f5f5f5;
+                    border-radius: 2px;
+                }
+            }
+        }
+    }
+}

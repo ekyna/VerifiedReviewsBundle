@@ -1,0 +1,25 @@
+{% spaceless %}
+<div>
+{% for r in reviews %}
+    {% if (loop.index0 % config.columns) == 0 %}<div class="row">{% endif %}
+    <div class="col-md-{{ 12 / config.columns }}">
+        <div class="verified-review">
+            <p>
+                <span>{{ config.trans.info|replace({'{name}': r.name, '{date}': r.date}) }}</span>
+                <span class="verified-review-rate" title="{{ config.trans.rate|replace({'{rate}': r.rate}) }}">
+                    <i>{{ config.trans.rate|replace({'{rate}': r.rate}) }}</i>
+                    <i style="width: {{ config.width / 5 * r.rate }}px"></i>
+                </span>
+            </p>
+            <p>{{ r.content|raw }}</p>
+            {% for c in r.comments %}
+            <p class="comment{% if not c.customer %} website{% endif %}">
+                <em>({{ c.date }})</em> {{ c.message|raw }}
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+    {% if (loop.index % config.columns) == 0 %}</div>{% endif %}
+{% endfor %}
+</div>
+{% endspaceless %}
