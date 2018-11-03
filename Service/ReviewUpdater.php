@@ -24,27 +24,27 @@ class ReviewUpdater
     /**
      * @var ReviewRepository
      */
-    private $reviewRepository;
+    protected $reviewRepository;
 
     /**
      * @var EntityManagerInterface
      */
-    private $manager;
+    protected $manager;
 
     /**
      * @var string
      */
-    private $websiteId;
+    protected $websiteId;
 
     /**
      * @var \Doctrine\ORM\Query
      */
-    private $nextProductQuery;
+    protected $nextProductQuery;
 
     /**
      * @var \Doctrine\ORM\Query
      */
-    private $findProductReviewByIdQuery;
+    protected $findProductReviewByIdQuery;
 
     /**
      * @var Client
@@ -262,7 +262,7 @@ class ReviewUpdater
      *
      * @return \DateTime
      */
-    private function parseCommentDate(string $input)
+    protected function parseCommentDate(string $input)
     {
         try {
             return new \DateTime($input);
@@ -287,7 +287,7 @@ class ReviewUpdater
      *
      * @return Product|null
      */
-    private function findNextProduct()
+    protected function findNextProduct()
     {
         if (!$this->nextProductQuery) {
             $ex = new Expr();
@@ -320,7 +320,7 @@ class ReviewUpdater
      *
      * @return ProductReview|null
      */
-    private function findProductReviewById($id)
+    protected function findProductReviewById($id)
     {
         if (!$this->findProductReviewByIdQuery) {
             $ex = new Expr();

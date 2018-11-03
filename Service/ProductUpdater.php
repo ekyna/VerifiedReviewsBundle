@@ -21,17 +21,17 @@ class ProductUpdater
     /**
      * @var ProductRepositoryInterface
      */
-    private $productProductRepository;
+    protected $productProductRepository;
 
     /**
      * @var EntityManagerInterface
      */
-    private $manager;
+    protected $manager;
 
     /**
      * @var string
      */
-    private $websiteId;
+    protected $websiteId;
 
 
     /**
