@@ -52,14 +52,4 @@ class UpdateReviewCommand extends Command
             $output->write('<error>failure</error>');
         }
     }
-
-    private function readNumber()
-    {
-
-    }
-
-    private function writeNumber()
-    {
-
-    }
 }

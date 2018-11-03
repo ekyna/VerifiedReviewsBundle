@@ -44,7 +44,7 @@ class ProductUpdater
     public function __construct(
         ProductRepositoryInterface $productProductRepository,
         EntityManagerInterface $manager,
-        string $websiteId
+        string $websiteId = null
     ) {
         $this->productProductRepository = $productProductRepository;
         $this->manager = $manager;
@@ -87,11 +87,7 @@ class ProductUpdater
 
         $count = 0;
         foreach ($data as $datum) {
-            /** @var ProductInterface $productProduct */
-            $productProduct = $this->productProductRepository->findOneBy([
-                'reference' => $datum['id_product'],
-            ]);
-            if (!$productProduct) {
+            if (!$productProduct = $this->findProduct($datum['id_product'])) {
                 continue;
             }
 
@@ -104,9 +100,9 @@ class ProductUpdater
                 $reviewProduct->setProduct($productProduct);
             }
 
-            $reviewProduct
-                ->setRate($datum['rate'])
-                ->setNbReviews($datum['nb_reviews']);
+            if (!$this->updateProduct($reviewProduct, $datum)) {
+                continue;
+            }
 
             $this->manager->persist($reviewProduct);
 
@@ -121,6 +117,48 @@ class ProductUpdater
             $this->manager->flush();
         }
 
+        $this->manager->clear();
+
         return true;
+    }
+
+    /**
+     * Updates the review product.
+     *
+     * @param Product $product
+     * @param array   $data
+     *
+     * @return bool Whether the review product as been updated.
+     */
+    protected function updateProduct(Product $product, array $data)
+    {
+        $changed = false;
+
+        if ($product->getRate() != $data['rate']) {
+            $product->setRate($data['rate']);
+            $changed = true;
+        }
+
+        if ($product->getNbReviews() != $data['nb_reviews']) {
+            $product->setNbReviews($data['nb_reviews']);
+            $changed = true;
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Finds the product by verified reviews reference.
+     *
+     * @param string $idProduct
+     *
+     * @return ProductInterface|null
+     */
+    protected function findProduct($idProduct)
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->productProductRepository->findOneBy([
+            'reference' => $idProduct,
+        ]);
     }
 }

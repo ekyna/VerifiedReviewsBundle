@@ -8,6 +8,10 @@
     <entity name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview"
             table="verified_reviews_product_review">
 
+        <unique-constraints>
+            <unique-constraint columns="product_review_id" name="unique_verified_reviews_product_review"/>
+        </unique-constraints>
+
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>

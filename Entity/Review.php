@@ -58,7 +58,7 @@ class Review implements ReviewInterface
     protected $content;
 
     /**
-     * @var float
+     * @var int
      */
     protected $rate;
 
@@ -154,7 +154,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setEmail(string $email)
+    public function setEmail(string $email = null)
     {
         $this->email = $email;
 
@@ -172,7 +172,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setLastName(string $name)
+    public function setLastName(string $name = null)
     {
         $this->lastName = $name;
 
@@ -190,7 +190,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setFirstName(string $name)
+    public function setFirstName(string $name = null)
     {
         $this->firstName = $name;
 
@@ -244,7 +244,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setRate(float $rate)
+    public function setRate(int $rate)
     {
         $this->rate = $rate;
 

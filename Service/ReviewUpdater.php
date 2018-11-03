@@ -7,6 +7,7 @@ use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview;
+use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -18,7 +19,7 @@ use GuzzleHttp\Exception\GuzzleException;
  */
 class ReviewUpdater
 {
-    const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/REVIEWS/%s.json';
+    const URL = 'https://cl.avis-verifies.com/fr/cache/%s/AWS/PRODUCT_API/REVIEWS/';
 
     /**
      * @var ReviewRepository
@@ -45,6 +46,11 @@ class ReviewUpdater
      */
     private $findProductReviewByIdQuery;
 
+    /**
+     * @var Client
+     */
+    protected $client;
+
 
     /**
      * Constructor.
@@ -56,7 +62,7 @@ class ReviewUpdater
     public function __construct(
         ReviewRepository $reviewRepository,
         EntityManagerInterface $manager,
-        string $websiteId
+        string $websiteId = null
     ) {
         $this->reviewRepository = $reviewRepository;
         $this->manager = $manager;
@@ -74,72 +80,42 @@ class ReviewUpdater
             return false;
         }
 
-        $client = new Client();
-
-        $path = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
+        $directory = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
+        $this->client = new Client([
+            'base_uri' => sprintf(static::URL, $directory),
+        ]);
 
         $count = 0;
         while (null !== $product = $this->findNextProduct()) {
-            $url = sprintf(static::URL, $path, $product->getProduct()->getReference());
-
-            try {
-                $res = $client->request('GET', $url);
-            } catch (GuzzleException $e) {
-                continue;
-            }
-
-            // Abort if request did not succeed
-            if (!in_array($res->getStatusCode(), [200, 304])) {
-                continue;
-            }
-
-            $data = json_decode($res->getBody(), true);
-
-            if (empty($data)) {
+            if (empty($data = $this->loadReviewsJson($product))) {
                 continue;
             }
 
             foreach ($data as $datum) {
                 $productReview = $this->findProductReviewById($datum['id_review_product']);
-                if ($productReview) {
-                    // TODO Watch for updates
+                if (!$productReview) {
+                    // If review exists
+                    $review = $this->reviewRepository->findOneByReviewId($datum['id_review']);
+                    if (!$review) {
+                        /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review $review */
+                        $review = $this->reviewRepository->createNew();
+                    }
 
-                    continue;
-                }
+                    $this->updateReview($review, $datum);
 
-                $review = $this->reviewRepository->findOneByReviewId($datum['id_review']);
-                if (!$review) {
-                    /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review $review */
-                    $review = $this->reviewRepository->createNew();
-                    $review
-                        ->setReviewId($datum['id_review'])
-                        ->setEmail($datum['email'])
-                        ->setLastName($datum['lastname'])
-                        ->setFirstName($datum['firstname'])
-                        ->setDate(new \DateTime($datum['review_date']))
-                        ->setContent($datum['review'])
-                        ->setRate($datum['rate'])
-                        ->setOrderNumber($datum['order_ref']);
+                    // Creates the ProductReview
+                    $productReview = new ProductReview();
+                    $productReview
+                        ->setProductReviewId($datum['id_review_product'])
+                        ->setProduct($product)
+                        ->setReview($review);
+                } else {
+                    $review = $productReview->getReview();
 
-                    if (isset($datum['moderation']) && !empty($datum['moderation'])) {
-                        foreach ($datum['moderation'] as $moderation) {
-                            // TODO Watch for updates
-                            $comment = new Comment();
-                            $comment
-                                ->setDate($this->parseCommentDate($moderation['comment_date']))
-                                ->setCustomer($moderation['comment_origin'] === '3')
-                                ->setMessage($moderation['comment']);
-
-                            $review->addComment($comment);
-                        }
+                    if (!$this->updateReview($review, $datum)) {
+                        continue;
                     }
                 }
-
-                $productReview = new ProductReview();
-                $productReview
-                    ->setProductReviewId($datum['id_review_product'])
-                    ->setProduct($product)
-                    ->setReview($review);
 
                 $this->manager->persist($review);
 
@@ -160,6 +136,123 @@ class ReviewUpdater
         // TODO Watch for deletions
 
         return true;
+    }
+
+    /**
+     * Updates the review.
+     *
+     * @param Review $review
+     * @param array  $data
+     *
+     * @return bool Whether the review has been updated.
+     */
+    protected function updateReview(Review $review, array $data)
+    {
+        $changed = false;
+
+        if ($review->getReviewId() != $data['id_review']) {
+            $review->setReviewId($data['id_review']);
+            $changed = true;
+        }
+        if ($review->getEmail() != $datum = $this->sanitizeString($data['email'])) {
+            $review->setEmail($datum);
+            $changed = true;
+        }
+        if ($review->getLastName() != $datum = $this->sanitizeString($data['lastname'])) {
+            $review->setLastName($datum);
+            $changed = true;
+        }
+        if ($review->getFirstName() != $datum = $this->sanitizeString($data['firstname'])) {
+            $review->setFirstName($datum);
+            $changed = true;
+        }
+        if ($review->getDate() != $date = new \DateTime($data['review_date'])) {
+            $review->setDate($date);
+            $changed = true;
+        }
+        if ($review->getContent() != $datum = trim($data['review'])) { // TODO html entities
+            $review->setContent($datum);
+            $changed = true;
+        }
+        if ($review->getRate() != $data['rate']) {
+            $review->setRate($data['rate']);
+            $changed = true;
+        }
+        if ($review->getOrderNumber() != $data['order_ref']) {
+            $review->setOrderNumber($data['order_ref']);
+            $changed = true;
+        }
+
+        if (isset($data['moderation']) && !empty($data['moderation'])) {
+            foreach ($data['moderation'] as $moderation) {
+                $date = $this->parseCommentDate($moderation['comment_date']);
+                $isCustomer = $moderation['comment_origin'] === '3';
+                $message = trim($moderation['comment']); // TODO html entities
+
+                // Existing comment lookup
+                foreach ($review->getComments() as $c) {
+                    if (($c->getDate() === $date) && ($c->isCustomer() === $isCustomer)) {
+                        if ($c->getMessage() != $message) {
+                            $c->setMessage($message);
+                            $changed = true;
+                        }
+
+                        continue 2;
+                    }
+                }
+
+                $comment = new Comment();
+                $comment
+                    ->setDate($date)
+                    ->setCustomer($isCustomer)
+                    ->setMessage($message);
+
+                $review->addComment($comment);
+
+                $changed = true;
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Sanitizes the given string.
+     *
+     * @param string|null $string
+     *
+     * @return null|string
+     */
+    protected function sanitizeString(string $string = null)
+    {
+        $string = trim($string);
+
+        return empty($string) ? $string : null;
+    }
+
+    /**
+     * Fetch the product reviews JSON data.
+     *
+     * @param Product $product
+     *
+     * @return array|null
+     */
+    protected function loadReviewsJson(Product $product)
+    {
+        $file = $product->getProduct()->getReference() . '.json';
+
+        try {
+            $res = $this->client->request('GET', $file);
+        } catch (GuzzleException $e) {
+            return null;
+        }
+
+        // Abort if request did not succeed
+        if (!in_array($res->getStatusCode(), [200, 304])) {
+            return null;
+        }
+
+        return json_decode($res->getBody(), true);
     }
 
     /**

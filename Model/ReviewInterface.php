@@ -68,7 +68,7 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setEmail(string $email);
+    public function setEmail(string $email = null);
 
     /**
      * Returns the last name.
@@ -84,7 +84,7 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setLastName(string $name);
+    public function setLastName(string $name = null);
 
     /**
      * Returns the first name.
@@ -100,7 +100,7 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setFirstName(string $name);
+    public function setFirstName(string $name = null);
 
     /**
      * Returns the date.
@@ -137,18 +137,18 @@ interface ReviewInterface extends ResourceInterface
     /**
      * Returns the rate.
      *
-     * @return float
+     * @return int
      */
     public function getRate();
 
     /**
      * Sets the rate.
      *
-     * @param float $rate
+     * @param int $rate
      *
      * @return $this|ReviewInterface
      */
-    public function setRate(float $rate);
+    public function setRate(int $rate);
 
     /**
      * Returns the order number.

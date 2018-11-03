@@ -9,17 +9,21 @@
             repository-class="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository"
             table="verified_reviews_review">
 
+        <unique-constraints>
+            <unique-constraint columns="review_id" name="unique_verified_reviews_review"/>
+        </unique-constraints>
+
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
 
         <field name="reviewId" column="review_id" type="string" length="36" nullable="false"/>
-        <field name="email" column="email" type="string" length="255" nullable="false"/>
-        <field name="lastName" column="last_name" type="string" length="64" nullable="false"/>
-        <field name="firstName" column="first_name" type="string" length="64" nullable="false"/>
+        <field name="email" column="email" type="string" length="255" nullable="true"/>
+        <field name="lastName" column="last_name" type="string" length="64" nullable="true"/>
+        <field name="firstName" column="first_name" type="string" length="64" nullable="true"/>
         <field name="date" column="date" type="datetime" nullable="false"/>
         <field name="content" column="content" type="text" nullable="false"/>
-        <field name="rate" column="rate" type="float" nullable="false"/>
+        <field name="rate" column="rate" type="smallint" nullable="false"/>
         <field name="orderNumber" column="order_number" type="string" length="16" nullable="false"/>
 
         <one-to-many target-entity="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview"
