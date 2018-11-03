@@ -26,32 +26,32 @@ class OrderNotifier
     /**
      * @var EntityManagerInterface
      */
-    private $manager;
+    protected $manager;
 
     /**
      * @var SubjectHelperInterface
      */
-    private $subjectHelper;
+    protected $subjectHelper;
 
     /**
      * @var CacheManager
      */
-    private $cacheManager;
+    protected $cacheManager;
 
     /**
      * @var string
      */
-    private $orderClass;
+    protected $orderClass;
 
     /**
      * @var array
      */
-    private $config;
+    protected $config;
 
     /**
      * @var \Doctrine\ORM\Query
      */
-    private $findOrdersQuery;
+    protected $findOrdersQuery;
 
 
     /**
@@ -206,7 +206,7 @@ class OrderNotifier
      * @param OrderItemInterface $item
      * @param array              $list
      */
-    private function buildProducts(OrderItemInterface $item, array &$list)
+    protected function buildProducts(OrderItemInterface $item, array &$list)
     {
         if ($item->isPrivate()) {
             return;
@@ -218,42 +218,9 @@ class OrderNotifier
                 $product = $product->getParent();
             }
 
-            $data = [
-                'id_product'   => $product->getReference(), // Required - Product Id
-                'name_product' => $product->getFullTitle(), // Required - Product Name
-            ];
-
-            $url = $this->subjectHelper->generatePublicUrl($product, false);
-            if ($url) {
-                $data['url_product'] = $url;
+            if (!empty($data = $this->buildProduct($product))) {
+                $list[] = $data;
             }
-
-            /** @var \Ekyna\Bundle\MediaBundle\Model\MediaInterface $image */
-            if ($image = $product->getImages(true, 1)->first()) {
-                $data['url_product_image'] = $this->cacheManager->getBrowserPath($image->getPath(), 'media_front');
-            }
-
-            foreach ($product->getReferences() as $reference) {
-                switch ($reference->getType()) {
-                    case ProductReferenceTypes::TYPE_EAN_13:
-                        $data['GTIN_EAN'] = $reference->getNumber();
-                        break;
-
-                    case ProductReferenceTypes::TYPE_MANUFACTURER:
-                        $data['MPN'] = $reference->getNumber();
-                        break;
-                }
-                // 'GTIN_UPC'
-                // 'GTIN_EAN'
-                // 'GTIN_JAN'
-                // 'GTIN_ISBN'
-                // 'MPN'
-            }
-
-            $data['sku'] = $product->getReference();
-            $data['brand_name'] = $product->getBrand()->getTitle();
-
-            $list[] = $data;
         }
 
         foreach ($item->getChildren() as $child) {
@@ -262,11 +229,58 @@ class OrderNotifier
     }
 
     /**
+     * Builds the product data.
+     *
+     * @param ProductInterface $product
+     *
+     * @return array|null
+     */
+    protected function buildProduct(ProductInterface $product)
+    {
+        $data = [
+            'id_product'   => $product->getReference(), // Required - Product Id
+            'name_product' => $product->getFullTitle(), // Required - Product Name
+        ];
+
+        $url = $this->subjectHelper->generatePublicUrl($product, false);
+        if ($url) {
+            $data['url_product'] = $url;
+        }
+
+        /** @var \Ekyna\Bundle\MediaBundle\Model\MediaInterface $image */
+        if ($image = $product->getImages(true, 1)->first()) {
+            $data['url_product_image'] = $this->cacheManager->getBrowserPath($image->getPath(), 'media_front');
+        }
+
+        foreach ($product->getReferences() as $reference) {
+            switch ($reference->getType()) {
+                case ProductReferenceTypes::TYPE_EAN_13:
+                    $data['GTIN_EAN'] = $reference->getNumber();
+                    break;
+
+                case ProductReferenceTypes::TYPE_MANUFACTURER:
+                    $data['MPN'] = $reference->getNumber();
+                    break;
+            }
+            // 'GTIN_UPC'
+            // 'GTIN_EAN'
+            // 'GTIN_JAN'
+            // 'GTIN_ISBN'
+            // 'MPN'
+        }
+
+        $data['sku'] = $product->getReference();
+        $data['brand_name'] = $product->getBrand()->getTitle();
+
+        return $data;
+    }
+
+    /**
      * Returns the next orders to notify.
      *
      * @return OrderInterface[]
      */
-    private function findNextOrders()
+    protected function findNextOrders()
     {
         if (!$this->findOrdersQuery) {
             $ex = new Expr();
@@ -305,7 +319,7 @@ class OrderNotifier
      *
      * @return bool
      */
-    private function checkConfig(OutputInterface $output)
+    protected function checkConfig(OutputInterface $output)
     {
         if (!$this->config['enable']) {
             $output->writeln("<error>Order notification is disabled</error>");

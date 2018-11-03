@@ -1,7 +1,7 @@
 {% spaceless %}
 <div>
 {% for r in reviews %}
-    {% if (loop.index0 % config.columns) == 0 %}<div class="row">{% endif %}
+    {% if (loop.last or (loop.index0 % config.columns) == 0) %}<div class="row">{% endif %}
     <div class="col-md-{{ 12 / config.columns }}">
         <div class="verified-review">
             <p>
@@ -19,7 +19,7 @@
             {% endfor %}
         </div>
     </div>
-    {% if (loop.index % config.columns) == 0 %}</div>{% endif %}
+    {% if (loop.last or (loop.index % config.columns) == 0) %}</div>{% endif %}
 {% endfor %}
 </div>
 {% endspaceless %}
