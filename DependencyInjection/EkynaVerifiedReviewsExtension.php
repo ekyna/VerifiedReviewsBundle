@@ -27,12 +27,14 @@ class EkynaVerifiedReviewsExtension extends AbstractExtension
         $definition->setArgument(2, $config['credential']['website_id']);
 
         $definition = $container->getDefinition(Service\OrderNotifier::class);
-        $definition->setArgument(4, [
-            'enable'     => $config['notification']['enable'],
-            'delay'      => $config['notification']['delay'],
-            'website_id' => $config['credential']['website_id'],
-            'secret_key' => $config['credential']['secret_key'],
-            'debug'      => $container->getParameter('kernel.debug'),
+        $definition->setArgument(5, [
+            'enable'       => $config['notification']['enable'],
+            'delay'        => $config['notification']['delay'],
+            'report_email' => $config['notification']['report_email'],
+            'limit'        => $config['notification']['limit'],
+            'website_id'   => $config['credential']['website_id'],
+            'secret_key'   => $config['credential']['secret_key'],
+            'debug'        => $container->getParameter('kernel.debug'),
         ]);
 
         $definition = $container->getDefinition(Service\Renderer\ReviewRenderer::class);

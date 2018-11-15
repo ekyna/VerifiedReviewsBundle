@@ -39,6 +39,11 @@ class OrderNotifier
     protected $cacheManager;
 
     /**
+     * @var \Swift_Mailer
+     */
+    protected $mailer;
+
+    /**
      * @var string
      */
     protected $orderClass;
@@ -60,6 +65,7 @@ class OrderNotifier
      * @param EntityManagerInterface $manager
      * @param SubjectHelperInterface $subjectHelper
      * @param CacheManager           $cacheManager
+     * @param \Swift_Mailer          $mailer
      * @param string                 $orderClass
      * @param array                  $config
      */
@@ -67,20 +73,23 @@ class OrderNotifier
         EntityManagerInterface $manager,
         SubjectHelperInterface $subjectHelper,
         CacheManager $cacheManager,
+        \Swift_Mailer $mailer,
         string $orderClass,
         array $config = []
     ) {
         $this->manager = $manager;
         $this->subjectHelper = $subjectHelper;
         $this->cacheManager = $cacheManager;
+        $this->mailer = $mailer;
         $this->orderClass = $orderClass;
 
         $this->config = array_replace([
-            'enable'     => false,
-            'delay'      => 7,
-            'website_id' => null,
-            'secret_key' => null,
-            'debug'      => true,
+            'enable'       => false,
+            'delay'        => 7,
+            'website_id'   => null,
+            'secret_key'   => null,
+            'debug'        => true,
+            'report_email' => null,
         ], $config);
     }
 
@@ -95,33 +104,60 @@ class OrderNotifier
             return;
         }
 
-        while (!empty($orders = $this->findNextOrders())) {
-            foreach ($orders as $order) {
-                $name = $order->getNumber();
-                $output->write(sprintf(
-                    '- %s %s ',
-                    $name,
-                    str_pad('.', 32 - mb_strlen($name), '.', STR_PAD_LEFT)
-                ));
+        $report = '';
+        $limit = $this->config['limit'];
 
-                if (!$this->notifyOrder($order)) {
-                    $output->writeln('<error>failure</error>');
+        while (null !== $order = $this->findNextOrder()) {
+            $name = $order->getNumber();
+            $output->write(sprintf(
+                '- %s %s ',
+                $name,
+                str_pad('.', 32 - mb_strlen($name), '.', STR_PAD_LEFT)
+            ));
 
-                    continue;
-                }
-
-                $notification = new OrderNotification();
-                $notification
-                    ->setOrder($order)
-                    ->setNotifiedAt(new \DateTime());
-
-                $this->manager->persist($notification);
-
+            if ($succeed = $this->notifyOrder($order)) {
                 $output->writeln('<info>success</info>');
+            } else {
+                $output->writeln('<error>failure</error>');
             }
 
+            $report .= sprintf(
+                "[%s] %s (%s) : %s\n",
+                $order->getId(),
+                $order->getNumber(),
+                $order->getEmail(),
+                $succeed ? 'success' : 'failure'
+            );
+
+            $notification = new OrderNotification();
+            $notification
+                ->setOrder($order)
+                ->setNotifiedAt(new \DateTime())
+                ->setSucceed($succeed);
+
+            $this->manager->persist($notification);
             $this->manager->flush();
+
+            unset($order);
+            unset($notification);
+
             $this->manager->clear();
+
+            $limit--;
+            if ($limit == 0) {
+                break;
+            }
+        }
+
+        if (!empty($report) && !empty($this->config['report_email'])) {
+            $message = \Swift_Message::newInstance();
+            $message
+                ->setFrom($this->config['report_email'])
+                ->setTo($this->config['report_email'])
+                ->setSubject('Verified review report.')
+                ->setBody($report);
+
+            $this->mailer->send($message);
         }
     }
 
@@ -144,15 +180,22 @@ class OrderNotifier
         // $url = "http://www.opiniones-verificadas.com/index.php";
 
         $acceptedAt = $order->getAcceptedAt()->format('Y-m-d H:i:s');
+        if ($this->config['debug']) {
+            $email = 'support@ekyna.com';
+            $delay = '0';
+        } else {
+            $email = $order->getEmail();
+            $delay = (string)$this->config['delay'];
+        }
 
         $data = [
-            'query'      => 'pushCommandeSHA1',             // Required
-            'order_ref'  => $order->getNumber(),            // Required - Reference order
-            'email'      => $order->getEmail(),             // Required - Client email
-            'lastname'   => $order->getLastName(),          // Required -  Client lastname
-            'firstname'  => $order->getFirstName(),         // Required -  Client firstname
-            'order_date' => $acceptedAt,                    // Required - Format YYYY-MM-JJ HH:MM:SS
-            'delay'      => (string)$this->config['delay'], // 0=Immediately / ‘n’ days between 1 and 30 days
+            'query'      => 'pushCommandeSHA1',     // Required
+            'order_ref'  => $order->getNumber(),    // Required - Reference order
+            'email'      => $email,                 // Required - Client email
+            'lastname'   => $order->getLastName(),  // Required -  Client lastname
+            'firstname'  => $order->getFirstName(), // Required -  Client firstname
+            'order_date' => $acceptedAt,            // Required - Format YYYY-MM-JJ HH:MM:SS
+            'delay'      => $delay,                 // 0=Immediately / ‘n’ days between 1 and 30 days
             'PRODUCTS'   => [],
             'sign'       => '',
         ];
@@ -188,10 +231,6 @@ class OrderNotifier
         ];
 
         $context = stream_context_create($post);
-
-        if ($this->config['debug']) {
-            return 1;
-        }
 
         $result = file_get_contents($url . '?action=act_api_notification_sha1&type=json2', false, $context);
 
@@ -276,11 +315,11 @@ class OrderNotifier
     }
 
     /**
-     * Returns the next orders to notify.
+     * Returns the next order to notify.
      *
-     * @return OrderInterface[]
+     * @return OrderInterface
      */
-    protected function findNextOrders()
+    protected function findNextOrder()
     {
         if (!$this->findOrdersQuery) {
             $ex = new Expr();
@@ -299,7 +338,7 @@ class OrderNotifier
                 ->andWhere($ex->eq('o.shipmentState', ':state'))
                 ->andWhere($ex->not($ex->exists($qb->getDQL())))
                 ->orderBy('o.acceptedAt', 'ASC')
-                ->setMaxResults(10)
+                ->setMaxResults(1)
                 ->getQuery()
                 ->useQueryCache(true);
         }
@@ -309,7 +348,7 @@ class OrderNotifier
         return $this->findOrdersQuery
             ->setParameter('date', $date, Type::DATETIME)
             ->setParameter('state', ShipmentStates::STATE_COMPLETED)
-            ->getResult();
+            ->getOneOrNullResult();
     }
 
     /**

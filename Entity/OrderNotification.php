@@ -26,6 +26,11 @@ class OrderNotification
      */
     private $notifiedAt;
 
+    /**
+     * @var bool
+     */
+    private $succeed;
+
 
     /**
      * Returns the id.
@@ -81,6 +86,30 @@ class OrderNotification
     public function setNotifiedAt(\DateTime $date)
     {
         $this->notifiedAt = $date;
+
+        return $this;
+    }
+
+    /**
+     * Returns whether the notification succeed.
+     *
+     * @return bool
+     */
+    public function isSucceed()
+    {
+        return (bool)$this->succeed;
+    }
+
+    /**
+     * Sets whether the notification succeed.
+     *
+     * @param bool $succeed
+     *
+     * @return OrderNotification
+     */
+    public function setSucceed(bool $succeed)
+    {
+        $this->succeed = $succeed;
 
         return $this;
     }
