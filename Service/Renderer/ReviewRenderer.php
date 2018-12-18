@@ -82,11 +82,18 @@ class ReviewRenderer
      * Renders the product count and stars.
      *
      * @param ProductInterface $subject
+     * @param array            $params
      *
      * @return string
      */
     public function renderProduct(ProductInterface $subject, array $params = [])
     {
+        $product = $this->productRepository->findOneByProduct($subject);
+
+        if (null === $product) {
+            return '';
+        }
+
         $params = array_replace([
             'tag'   => 'div',
             'class' => 'verified-reviews-product',
@@ -96,8 +103,6 @@ class ReviewRenderer
         if (!empty($params['href'])) {
             $params['tag'] = 'a';
         }
-
-        $product = $this->productRepository->findOneByProduct($subject);
 
         $count = $this->translator->trans(
             'ekyna_verified_reviews.count',
