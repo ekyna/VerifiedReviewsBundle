@@ -1,33 +1,44 @@
+.verified-review-rate {
+    background-color: #ccc;
+    display: inline-block;
+    height: 18px;
+    overflow: hidden;
+    position: relative;
+    width: 90px;
+
+    > i:first-child {
+        //noinspection CssUnknownTarget
+        background: url('/bundles/ekynaverifiedreviews/img/stars.png') no-repeat 0 0 scroll;
+        display: block;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        text-indent: 100px;
+        top: 0;
+        width: 100%;
+    }
+
+    > i:last-child {
+        background-color: #ff890e;
+        display: block;
+        height: 100%;
+        width: 100%;
+    }
+}
+
+.verified-reviews-product {
+    background-color: #e5e5e5;
+    padding: 9px 12px;
+    text-align: center;
+
+    > .verified-review-rate {
+        margin-left: 12px;
+        vertical-align: text-bottom;
+    }
+}
+
 #verified-reviews {
     margin-bottom: 20px;
-
-    .verified-review-rate {
-        background-color: #ccc;
-        display: inline-block;
-        height: 18px;
-        overflow: hidden;
-        position: relative;
-        width: 90px;
-
-        > i:first-child {
-            //noinspection CssUnknownTarget
-            background: url('/bundles/ekynaverifiedreviews/img/stars.png') no-repeat 0 0 scroll;
-            display: block;
-            height: 100%;
-            left: 0;
-            position: absolute;
-            text-indent: 100px;
-            top: 0;
-            width: 100%;
-        }
-
-        > i:last-child {
-            background-color: #ff890e;
-            display: block;
-            height: 100%;
-            width: 100%;
-        }
-    }
 
     .verified-reviews-header {
         background-color: #e5e5e5;

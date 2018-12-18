@@ -1,11 +1,17 @@
 {% spaceless %}
 <div>
 {% for r in reviews %}
-    {% if (loop.first or (loop.index0 % config.columns) == 0) %}<div class="row">{% endif %}
-    <div class="col-md-{{ 12 / config.columns }}">
+    {% if loop.first %}<div class="row">{% elseif loop.index0 % config.columns == 0 %}<div class="row">{% endif %}
+    <div class="col-md-{{ 12 / config.columns }}" data-index0="{{ loop.index0 }}" data-index="{{ loop.index }}">
         <div class="verified-review">
             <p>
-                <span>{{ config.trans.info|replace({'{name}': r.name, '{date}': r.date}) }}</span>
+                <span>
+                    {% if r.name is empty %}
+                        {{ config.trans.anon|replace({'{date}': r.date}) }}
+                    {% else %}
+                        {{ config.trans.info|replace({'{name}': r.name, '{date}': r.date}) }}
+                    {% endif %}
+                </span>
                 <span class="verified-review-rate" title="{{ config.trans.rate|replace({'{rate}': r.rate}) }}">
                     <i>{{ config.trans.rate|replace({'{rate}': r.rate}) }}</i>
                     <i style="width: {{ config.width / 5 * r.rate }}px"></i>
@@ -19,7 +25,7 @@
             {% endfor %}
         </div>
     </div>
-    {% if (loop.last or (loop.index % config.columns) == 0) %}</div>{% endif %}
+    {% if loop.last %}</div>{% elseif loop.index % config.columns == 0 %}</div>{% endif %}
 {% endfor %}
 </div>
 {% endspaceless %}

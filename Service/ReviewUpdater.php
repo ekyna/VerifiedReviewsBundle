@@ -187,18 +187,24 @@ class ReviewUpdater
             foreach ($data['moderation'] as $moderation) {
                 $date = $this->parseCommentDate($moderation['comment_date']);
                 $isCustomer = $moderation['comment_origin'] === '3';
-                $message = trim($moderation['comment']); // TODO html entities
+                $message = trim($moderation['comment']);
 
                 // Existing comment lookup
                 foreach ($review->getComments() as $c) {
-                    if (($c->getDate() === $date) && ($c->isCustomer() === $isCustomer)) {
-                        if ($c->getMessage() != $message) {
-                            $c->setMessage($message);
-                            $changed = true;
-                        }
-
-                        continue 2;
+                    if ($c->getDate()->format('Y-m-d H:i:s') != $date->format('Y-m-d H:i:s')) {
+                        continue;
                     }
+
+                    if ($c->isCustomer() === $isCustomer) {
+                        continue;
+                    }
+
+                    if ($c->getMessage() != $message) {
+                        $c->setMessage($message);
+                        $changed = true;
+                    }
+
+                    continue 2;
                 }
 
                 $comment = new Comment();
@@ -273,13 +279,12 @@ class ReviewUpdater
             throw new \Exception("Failed to parse date time string.");
         }
 
-        $date = "{$matches['date']}T{$matches['time']}" . ($matches['zone'][0] === '-' ? '' : '+') . $matches['zone'];
-
+        /*$date = "{$matches['date']}T{$matches['time']}" . ($matches['zone'][0] === '-' ? '' : '+') . $matches['zone'];
         if (!$date = \DateTime::createFromFormat(\DateTime::ATOM, $date)) {
             throw new \Exception("Failed to parse date time string.");
-        }
+        }*/
 
-        return $date;
+        return new \DateTime("{$matches['date']} {$matches['time']}");
     }
 
     /**

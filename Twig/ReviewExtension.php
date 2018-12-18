@@ -33,7 +33,16 @@ class ReviewExtension extends \Twig_Extension
     public function getFilters()
     {
         return [
-            new \Twig_SimpleFilter('verified_reviews', [$this->renderer, 'renderReviews'], ['is_safe' => ['html']]),
+            new \Twig_SimpleFilter(
+                'verified_reviews',
+                [$this->renderer, 'renderReviews'],
+                ['is_safe' => ['html']]
+            ),
+            new \Twig_SimpleFilter(
+                'verified_reviews_product',
+                [$this->renderer, 'renderProduct'],
+                ['is_safe' => ['html']]
+            ),
         ];
     }
 }

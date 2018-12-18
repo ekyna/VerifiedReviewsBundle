@@ -46,7 +46,7 @@ class ReviewNormalizer extends AbstractResourceNormalizer
                 ];
             }
 
-            $name = mb_convert_case($resource->getFirstName() . ' ' . $resource->getLastName(), MB_CASE_TITLE, 'UTF-8');
+            $name = mb_convert_case(trim($resource->getFirstName() . ' ' . $resource->getLastName()), MB_CASE_TITLE, 'UTF-8');
 
             return [
                 'id'       => $resource->getId(),

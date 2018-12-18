@@ -79,6 +79,50 @@ class ReviewRenderer
     }
 
     /**
+     * Renders the product count and stars.
+     *
+     * @param ProductInterface $subject
+     *
+     * @return string
+     */
+    public function renderProduct(ProductInterface $subject, array $params = [])
+    {
+        $params = array_replace([
+            'tag'   => 'div',
+            'class' => 'verified-reviews-product',
+            'href'  => null,
+        ], $params);
+
+        if (!empty($params['href'])) {
+            $params['tag'] = 'a';
+        }
+
+        $product = $this->productRepository->findOneByProduct($subject);
+
+        $count = $this->translator->trans(
+            'ekyna_verified_reviews.count',
+            ['{count}' => $product->getNbReviews()]
+        );
+
+        $rate = $this->translator->trans(
+            'ekyna_verified_reviews.review.rate',
+            ['{rate}' => $product->getRate()]
+        );
+
+        $width = ($this->config['width'] / 5 * $product->getRate()) . 'px';
+
+        $href = !empty($params['href']) ? ' href="' . $params['href'] . '"' : '';
+
+        return '<' . $params['tag'] . $href . ' class="' . $params['class'] . '">' .
+            $count .
+            '<span class="verified-review-rate" title="' . $rate . '">' .
+                '<i>' . $rate . '</i>' .
+                '<i style="width: ' . $width . '"></i>' .
+            '</span>' .
+        '</' . $params['tag'] . '>';
+    }
+
+    /**
      * Renders the product reviews.
      *
      * @param ProductInterface $subject
@@ -93,6 +137,7 @@ class ReviewRenderer
 
         $translations = [
             'info' => $this->translator->trans('ekyna_verified_reviews.review.info'),
+            'anon' => $this->translator->trans('ekyna_verified_reviews.review.anon'),
             'rate' => $this->translator->trans('ekyna_verified_reviews.review.rate'),
         ];
 
