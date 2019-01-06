@@ -31,34 +31,34 @@ class ReviewNormalizer extends AbstractResourceNormalizer
 
     /**
      * @inheritdoc
+     *
+     * @param ReviewInterface $review
      */
-    public function normalize($resource, $format = null, array $context = [])
+    public function normalize($review, $format = null, array $context = [])
     {
-        /** @var ReviewInterface $resource */
-
-        if (in_array('Front', $context['groups'], true)) {
+        if ($this->contextHasGroup(['Default', 'Front', 'Review'], $context)) {
             $comments = [];
-            foreach ($resource->getComments() as $comment) {
+            foreach ($review->getComments() as $comment) {
                 $comments[] = [
-                    'date'     => $this->formatter->date($resource->getDate()),
+                    'date'     => $this->formatter->date($review->getDate()),
                     'customer' => $comment->isCustomer(),
                     'message'  => $comment->getMessage(),
                 ];
             }
 
-            $name = mb_convert_case(trim($resource->getFirstName() . ' ' . $resource->getLastName()), MB_CASE_TITLE, 'UTF-8');
+            $name = mb_convert_case(trim($review->getFirstName() . ' ' . $review->getLastName()), MB_CASE_TITLE, 'UTF-8');
 
             return [
-                'id'       => $resource->getId(),
+                'id'       => $review->getId(),
                 'name'     => $name,
-                'date'     => $this->formatter->date($resource->getDate()),
-                'rate'     => $resource->getRate(),
-                'content'  => $resource->getContent(),
+                'date'     => $this->formatter->date($review->getDate()),
+                'rate'     => $review->getRate(),
+                'content'  => $review->getContent(),
                 'comments' => $comments,
             ];
         }
 
-        return parent::normalize($resource, $format, $context);
+        return parent::normalize($review, $format, $context);
     }
 
     /**
