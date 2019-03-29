@@ -3,7 +3,8 @@
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service\Serializer;
 
 use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
-use Ekyna\Component\Commerce\Common\Util\Formatter;
+use Ekyna\Component\Commerce\Common\Util\FormatterAwareTrait;
+use Ekyna\Component\Commerce\Common\Util\FormatterFactory;
 use Ekyna\Component\Resource\Serializer\AbstractResourceNormalizer;
 
 /**
@@ -13,20 +14,17 @@ use Ekyna\Component\Resource\Serializer\AbstractResourceNormalizer;
  */
 class ReviewNormalizer extends AbstractResourceNormalizer
 {
-    /**
-     * @var Formatter
-     */
-    private $formatter;
+    use FormatterAwareTrait;
 
 
     /**
      * Constructor.
      *
-     * @param Formatter $formatter
+     * @param FormatterFactory $formatterFactory
      */
-    public function __construct(Formatter $formatter)
+    public function __construct(FormatterFactory $formatterFactory)
     {
-        $this->formatter = $formatter;
+        $this->formatterFactory = $formatterFactory;
     }
 
     /**
@@ -36,11 +34,13 @@ class ReviewNormalizer extends AbstractResourceNormalizer
      */
     public function normalize($review, $format = null, array $context = [])
     {
+        $formatter = $this->getFormatter();
+
         if ($this->contextHasGroup(['Default', 'Front', 'Review'], $context)) {
             $comments = [];
             foreach ($review->getComments() as $comment) {
                 $comments[] = [
-                    'date'     => $this->formatter->date($review->getDate()),
+                    'date'     => $formatter->date($review->getDate()),
                     'customer' => $comment->isCustomer(),
                     'message'  => $comment->getMessage(),
                 ];
@@ -51,7 +51,7 @@ class ReviewNormalizer extends AbstractResourceNormalizer
             return [
                 'id'       => $review->getId(),
                 'name'     => $name,
-                'date'     => $this->formatter->date($review->getDate()),
+                'date'     => $formatter->date($review->getDate()),
                 'rate'     => $review->getRate(),
                 'content'  => $review->getContent(),
                 'comments' => $comments,

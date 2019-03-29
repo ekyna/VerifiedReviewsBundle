@@ -50,7 +50,7 @@
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\Serializer\ReviewNormalizer"
                  parent="ekyna_resource.serializer.resource_normalizer"
                  public="false">
-            <argument type="service" id="ekyna_commerce.util.formatter.default"/>
+            <argument type="service" id="ekyna_commerce.util.formatter_factory"/>
             <tag name="serializer.normalizer"/>
             <tag name="serializer.denormalizer"/>
         </service>
