@@ -343,7 +343,7 @@ class OrderNotifier
                 ->useQueryCache(true);
         }
 
-        $date = (new \DateTime('-1 month'))->setTime(0, 0, 0);
+        $date = (new \DateTime('-1 month'))->setTime(0, 0, 0, 0);
 
         return $this->findOrdersQuery
             ->setParameter('date', $date, Type::DATETIME)
