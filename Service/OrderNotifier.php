@@ -294,11 +294,11 @@ class OrderNotifier
         foreach ($product->getReferences() as $reference) {
             switch ($reference->getType()) {
                 case ProductReferenceTypes::TYPE_EAN_13:
-                    $data['GTIN_EAN'] = $reference->getNumber();
+                    $data['GTIN_EAN'] = $reference->getCode();
                     break;
 
                 case ProductReferenceTypes::TYPE_MANUFACTURER:
-                    $data['MPN'] = $reference->getNumber();
+                    $data['MPN'] = $reference->getCode();
                     break;
             }
             // 'GTIN_UPC'
