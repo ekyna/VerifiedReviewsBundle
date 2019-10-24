@@ -55,15 +55,16 @@ class ReviewUpdater
     /**
      * Constructor.
      *
-     * @param ReviewRepository       $reviewRepository
+     * @param ReviewRepository $reviewRepository
      * @param EntityManagerInterface $manager
-     * @param string                 $websiteId
+     * @param string $websiteId
      */
     public function __construct(
         ReviewRepository $reviewRepository,
         EntityManagerInterface $manager,
         string $websiteId = null
-    ) {
+    )
+    {
         $this->reviewRepository = $reviewRepository;
         $this->manager = $manager;
         $this->websiteId = $websiteId;
@@ -142,7 +143,7 @@ class ReviewUpdater
      * Updates the review.
      *
      * @param Review $review
-     * @param array  $data
+     * @param array $data
      *
      * @return bool Whether the review has been updated.
      */
@@ -170,7 +171,7 @@ class ReviewUpdater
             $review->setDate($date);
             $changed = true;
         }
-        if ($review->getContent() != $datum = trim($data['review'])) { // TODO html entities
+        if ($review->getContent() != $datum = $this->remove4BytesChars(trim($data['review']))) {
             $review->setContent($datum);
             $changed = true;
         }
@@ -344,5 +345,23 @@ class ReviewUpdater
             ->findProductReviewByIdQuery
             ->setParameter('id', $id)
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Removes UTF8 4 bytes characters.
+     * (Such characters would need a utf8mb4 mysql charset and collation)
+     *
+     * @param string $string
+     *
+     * @return string
+     */
+    private function remove4BytesChars(string $string): string
+    {
+        // https://stackoverflow.com/a/16496799
+        return preg_replace('%(?:
+          \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
+          | [\xF1-\xF3][\x80-\xBF]{3}        # planes 4-15
+          | \xF4[\x80-\x8F][\x80-\xBF]{2}    # plane 16
+        )%xs', "", $string);
     }
 }
