@@ -6,7 +6,6 @@
                             http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
 
     <entity name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product"
-            repository-class="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository"
             table="verified_reviews_product">
 
         <id name="id" type="integer" column="id">

@@ -5,11 +5,8 @@
 
     <services>
 
-        <service id="ekyna_verified_reviews.product.repository"
-                 class="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository"
-                 public="true">
-            <factory service="doctrine" method="getRepository"/>
-            <argument>Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product</argument>
+        <service id="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository">
+            <argument type="service" id="Symfony\Bridge\Doctrine\RegistryInterface"/>
         </service>
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Controller\ApiController" public="true">
@@ -39,7 +36,7 @@
         </service>
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer\ReviewRenderer" public="false">
-            <argument type="service" id="ekyna_verified_reviews.product.repository"/>
+            <argument type="service" id="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository"/>
             <argument type="service" id="ekyna_verified_reviews.review.repository"/>
             <argument type="service" id="Symfony\Component\Serializer\Normalizer\NormalizerInterface"/>
             <argument type="service" id="Symfony\Component\Translation\TranslatorInterface"/>
@@ -60,8 +57,15 @@
             <tag name="twig.extension"/>
         </service>
 
+        <service id="Ekyna\Bundle\VerifiedReviewsBundle\EventListener\LoyaltyEventSubscriber" public="true">
+            <argument type="service" id="ekyna_commerce.order.repository"/>
+            <argument type="service" id="Ekyna\Component\Commerce\Features"/>
+            <argument type="service" id="Ekyna\Component\Commerce\Customer\Loyalty\LoyaltyUpdater"/>
+            <tag name="resource.event_subscriber"/>
+        </service>
+
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\EventListener\ProductEventSubscriber" public="true">
-            <argument type="service" id="ekyna_verified_reviews.product.repository"/>
+            <argument type="service" id="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository"/>
             <tag name="resource.event_subscriber"/>
         </service>
 

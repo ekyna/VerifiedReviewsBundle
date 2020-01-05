@@ -6,7 +6,6 @@
                             http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
 
     <mapped-superclass name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review"
-            repository-class="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository"
             table="verified_reviews_review">
 
         <unique-constraints>
@@ -24,7 +23,7 @@
         <field name="date" column="date" type="datetime" nullable="false"/>
         <field name="content" column="content" type="text" nullable="false"/>
         <field name="rate" column="rate" type="smallint" nullable="false"/>
-        <field name="orderNumber" column="order_number" type="string" length="16" nullable="false"/>
+        <field name="orderNumber" column="order_number" type="string" length="32" nullable="false"/>
 
         <one-to-many target-entity="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview"
                      field="productReviews" mapped-by="review" orphan-removal="true">
