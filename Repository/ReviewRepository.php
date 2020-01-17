@@ -2,7 +2,6 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Repository;
 
-use Doctrine\DBAL\Types\Type;
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
 use Ekyna\Component\Resource\Doctrine\ORM\ResourceRepository;
 

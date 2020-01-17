@@ -2,6 +2,7 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment;
@@ -55,19 +56,18 @@ class ReviewUpdater
     /**
      * Constructor.
      *
-     * @param ReviewRepository $reviewRepository
+     * @param ReviewRepository       $reviewRepository
      * @param EntityManagerInterface $manager
-     * @param string $websiteId
+     * @param string                 $websiteId
      */
     public function __construct(
         ReviewRepository $reviewRepository,
         EntityManagerInterface $manager,
         string $websiteId = null
-    )
-    {
+    ) {
         $this->reviewRepository = $reviewRepository;
-        $this->manager = $manager;
-        $this->websiteId = $websiteId;
+        $this->manager          = $manager;
+        $this->websiteId        = $websiteId;
     }
 
     /**
@@ -81,7 +81,7 @@ class ReviewUpdater
             return false;
         }
 
-        $directory = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
+        $directory    = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
         $this->client = new Client([
             'base_uri' => sprintf(static::URL, $directory),
         ]);
@@ -143,7 +143,7 @@ class ReviewUpdater
      * Updates the review.
      *
      * @param Review $review
-     * @param array $data
+     * @param array  $data
      *
      * @return bool Whether the review has been updated.
      */
@@ -186,9 +186,9 @@ class ReviewUpdater
 
         if (isset($data['moderation']) && !empty($data['moderation'])) {
             foreach ($data['moderation'] as $moderation) {
-                $date = $this->parseCommentDate($moderation['comment_date']);
+                $date       = $this->parseCommentDate($moderation['comment_date']);
                 $isCustomer = $moderation['comment_origin'] === '3';
-                $message = trim($moderation['comment']);
+                $message    = trim($moderation['comment']);
 
                 // Existing comment lookup
                 foreach ($review->getComments() as $c) {
@@ -276,7 +276,8 @@ class ReviewUpdater
         } catch (\Exception $e) {
         }
 
-        if (!preg_match('~^(?P<date>[0-9\-]+)T(?P<time>[0-9\:]{8})\.0000000 (?P<zone>[0-9\-\+\:]+)$~', $input, $matches)) {
+        $regex = '~^(?P<date>[0-9\-]+)T(?P<time>[0-9\:]{8})\.0000000 (?P<zone>[0-9\-\+\:]+)$~';
+        if (!preg_match($regex, $input, $matches)) {
             throw new \Exception("Failed to parse date time string.");
         }
 
@@ -315,7 +316,7 @@ class ReviewUpdater
 
         return $this
             ->nextProductQuery
-            ->setParameter('yesterday', $yesterday, \Doctrine\DBAL\Types\Type::DATETIME)
+            ->setParameter('yesterday', $yesterday, Types::DATETIME_MUTABLE)
             ->getOneOrNullResult();
     }
 

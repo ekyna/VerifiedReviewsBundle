@@ -2,7 +2,7 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\CommerceBundle\Model\OrderInterface;
@@ -77,11 +77,11 @@ class OrderNotifier
         string $orderClass,
         array $config = []
     ) {
-        $this->manager = $manager;
+        $this->manager       = $manager;
         $this->subjectHelper = $subjectHelper;
-        $this->cacheManager = $cacheManager;
-        $this->mailer = $mailer;
-        $this->orderClass = $orderClass;
+        $this->cacheManager  = $cacheManager;
+        $this->mailer        = $mailer;
+        $this->orderClass    = $orderClass;
 
         $this->config = array_replace([
             'enable'       => false,
@@ -105,7 +105,7 @@ class OrderNotifier
         }
 
         $report = '';
-        $limit = $this->config['limit'];
+        $limit  = $this->config['limit'];
 
         while (null !== $order = $this->findNextOrder()) {
             $name = $order->getNumber();
@@ -308,7 +308,7 @@ class OrderNotifier
             // 'MPN'
         }
 
-        $data['sku'] = $product->getReference();
+        $data['sku']        = $product->getReference();
         $data['brand_name'] = $product->getBrand()->getTitle();
 
         return $data;
@@ -346,7 +346,7 @@ class OrderNotifier
         $date = (new \DateTime('-1 month'))->setTime(0, 0, 0, 0);
 
         return $this->findOrdersQuery
-            ->setParameter('date', $date, Type::DATETIME)
+            ->setParameter('date', $date, Types::DATE_MUTABLE)
             ->setParameter('state', ShipmentStates::STATE_COMPLETED)
             ->getOneOrNullResult();
     }
