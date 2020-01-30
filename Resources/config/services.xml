@@ -7,6 +7,7 @@
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository">
             <argument type="service" id="Symfony\Bridge\Doctrine\RegistryInterface"/>
+            <tag name="doctrine.repository_service"/>
         </service>
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Controller\ApiController" public="true">
