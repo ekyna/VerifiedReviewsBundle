@@ -11,7 +11,7 @@ use Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class ReviewUpdater
@@ -26,6 +26,11 @@ class ReviewUpdater
      * @var ReviewRepository
      */
     protected $reviewRepository;
+
+    /**
+     * @var ValidatorInterface
+     */
+    protected $validator;
 
     /**
      * @var EntityManagerInterface
@@ -57,17 +62,20 @@ class ReviewUpdater
      * Constructor.
      *
      * @param ReviewRepository       $reviewRepository
+     * @param ValidatorInterface     $validator
      * @param EntityManagerInterface $manager
      * @param string                 $websiteId
      */
     public function __construct(
         ReviewRepository $reviewRepository,
+        ValidatorInterface $validator,
         EntityManagerInterface $manager,
         string $websiteId = null
     ) {
         $this->reviewRepository = $reviewRepository;
-        $this->manager          = $manager;
-        $this->websiteId        = $websiteId;
+        $this->validator = $validator;
+        $this->manager = $manager;
+        $this->websiteId = $websiteId;
     }
 
     /**
@@ -81,49 +89,53 @@ class ReviewUpdater
             return false;
         }
 
-        $directory    = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
+        $directory = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
         $this->client = new Client([
             'base_uri' => sprintf(static::URL, $directory),
         ]);
 
         $count = 0;
         while (null !== $product = $this->findNextProduct()) {
-            if (empty($data = $this->loadReviewsJson($product))) {
-                continue;
-            }
+            if (!empty($data = $this->loadReviewsJson($product))) {
+                foreach ($data as $datum) {
+                    $productReview = $this->findProductReviewById($datum['id_review_product']);
+                    if (!$productReview) {
+                        // If review exists
+                        $review = $this->reviewRepository->findOneByReviewId($datum['id_review']);
+                        if (!$review) {
+                            /** @var Review $review */
+                            $review = $this->reviewRepository->createNew();
+                        }
 
-            foreach ($data as $datum) {
-                $productReview = $this->findProductReviewById($datum['id_review_product']);
-                if (!$productReview) {
-                    // If review exists
-                    $review = $this->reviewRepository->findOneByReviewId($datum['id_review']);
-                    if (!$review) {
-                        /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review $review */
-                        $review = $this->reviewRepository->createNew();
+                        $this->updateReview($review, $datum);
+                    } else {
+                        $review = $productReview->getReview();
+
+                        if (!$this->updateReview($review, $datum)) {
+                            continue;
+                        }
                     }
 
-                    $this->updateReview($review, $datum);
-
-                    // Creates the ProductReview
-                    $productReview = new ProductReview();
-                    $productReview
-                        ->setProductReviewId($datum['id_review_product'])
-                        ->setProduct($product)
-                        ->setReview($review);
-                } else {
-                    $review = $productReview->getReview();
-
-                    if (!$this->updateReview($review, $datum)) {
+                    if (0 < $this->validator->validate($review)->count()) {
                         continue;
                     }
-                }
 
-                $this->manager->persist($review);
+                    if (!$productReview) {
+                        // Creates the ProductReview
+                        $productReview = new ProductReview();
+                        $productReview
+                            ->setProductReviewId($datum['id_review_product'])
+                            ->setProduct($product)
+                            ->setReview($review);
+                    }
 
-                $count++;
+                    $this->manager->persist($review);
 
-                if ($count % 20 === 0) {
-                    $this->manager->flush();
+                    $count++;
+
+                    if ($count % 20 === 0) {
+                        $this->manager->flush();
+                    }
                 }
             }
 
@@ -186,9 +198,9 @@ class ReviewUpdater
 
         if (isset($data['moderation']) && !empty($data['moderation'])) {
             foreach ($data['moderation'] as $moderation) {
-                $date       = $this->parseCommentDate($moderation['comment_date']);
+                $date = $this->parseCommentDate($moderation['comment_date']);
                 $isCustomer = $moderation['comment_origin'] === '3';
-                $message    = trim($moderation['comment']);
+                $message = trim($moderation['comment']);
 
                 // Existing comment lookup
                 foreach ($review->getComments() as $c) {
@@ -246,11 +258,11 @@ class ReviewUpdater
      */
     protected function loadReviewsJson(Product $product)
     {
-        $file = $product->getProduct()->getReference() . '.json';
+        $file = urlencode($product->getProduct()->getReference()) . '.json';
 
         try {
             $res = $this->client->request('GET', $file);
-        } catch (GuzzleException $e) {
+        } catch (\Throwable $e) {
             return null;
         }
 

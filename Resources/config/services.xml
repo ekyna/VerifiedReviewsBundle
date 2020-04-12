@@ -17,12 +17,14 @@
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\ProductUpdater" public="false">
             <argument type="service" id="ekyna_product.product.repository"/>
+            <argument type="service" id="Symfony\Component\Validator\Validator\ValidatorInterface"/>
             <argument type="service" id="Doctrine\ORM\EntityManagerInterface"/>
             <argument/><!-- Replace by DI extension -->
         </service>
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\ReviewUpdater" public="false">
             <argument type="service" id="ekyna_verified_reviews.review.repository"/>
+            <argument type="service" id="Symfony\Component\Validator\Validator\ValidatorInterface"/>
             <argument type="service" id="Doctrine\ORM\EntityManagerInterface"/>
             <argument/><!-- Replace by DI extension -->
         </service>

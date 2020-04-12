@@ -8,6 +8,7 @@ use Ekyna\Bundle\ProductBundle\Repository\ProductRepositoryInterface;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class ProductUpdater
@@ -24,6 +25,11 @@ class ProductUpdater
     protected $productProductRepository;
 
     /**
+     * @var ValidatorInterface
+     */
+    protected $validator;
+
+    /**
      * @var EntityManagerInterface
      */
     protected $manager;
@@ -38,15 +44,17 @@ class ProductUpdater
      * Constructor.
      *
      * @param ProductRepositoryInterface $productProductRepository
-     * @param EntityManagerInterface     $manager
+     * @param ValidatorInterface         $validator
      * @param string                     $websiteId
      */
     public function __construct(
         ProductRepositoryInterface $productProductRepository,
+        ValidatorInterface $validator,
         EntityManagerInterface $manager,
         string $websiteId = null
     ) {
         $this->productProductRepository = $productProductRepository;
+        $this->validator = $validator;
         $this->manager = $manager;
         $this->websiteId = $websiteId;
     }
@@ -87,7 +95,7 @@ class ProductUpdater
 
         $count = 0;
         foreach ($data as $datum) {
-            if (!$productProduct = $this->findProduct($datum['id_product'])) {
+            if (!$productProduct = $this->findProduct(urldecode($datum['id_product']))) {
                 continue;
             }
 
@@ -101,6 +109,10 @@ class ProductUpdater
             }
 
             if (!$this->updateProduct($reviewProduct, $datum)) {
+                continue;
+            }
+
+            if (0 < $this->validator->validate($reviewProduct)->count()) {
                 continue;
             }
 

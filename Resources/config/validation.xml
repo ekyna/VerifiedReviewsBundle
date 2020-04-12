@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<constraint-mapping
+    xmlns="http://symfony.com/schema/dic/constraint-mapping"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                        http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+
+    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment">
+        <property name="review">
+            <constraint name="NotNull"/>
+        </property>
+        <property name="date">
+            <constraint name="NotNull"/>
+        </property>
+        <property name="message">
+            <constraint name="NotBlank"/>
+        </property>
+    </class>
+
+    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product">
+        <property name="product">
+            <constraint name="NotNull"/>
+        </property>
+        <property name="nbReviews">
+            <constraint name="GreaterThanOrEqual">
+                <option name="value">0</option>
+            </constraint>
+        </property>
+        <property name="rate">
+            <constraint name="GreaterThanOrEqual">
+                <option name="value">0</option>
+            </constraint>
+        </property>
+        <property name="fetchedAt">
+            <constraint name="NotNull"/>
+        </property>
+    </class>
+
+    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview">
+        <property name="productReviewId">
+            <constraint name="NotBlank"/>
+        </property>
+        <property name="product">
+            <constraint name="NotNull"/>
+        </property>
+        <property name="review">
+            <constraint name="NotNull"/>
+        </property>
+    </class>
+
+    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review">
+        <property name="reviewId">
+            <constraint name="NotBlank"/>
+        </property>
+        <property name="date">
+            <constraint name="NotNull"/>
+        </property>
+        <property name="content">
+            <constraint name="NotBlank"/>
+        </property>
+        <property name="rate">
+            <constraint name="NotBlank"/>
+        </property>
+        <property name="orderNumber">
+            <constraint name="NotBlank"/>
+        </property>
+        <property name="comments">
+            <constraint name="Valid"/>
+        </property>
+    </class>
+
+</constraint-mapping>

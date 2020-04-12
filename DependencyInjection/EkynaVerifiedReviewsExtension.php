@@ -21,10 +21,10 @@ class EkynaVerifiedReviewsExtension extends AbstractExtension
         $config = $this->configure($configs, 'ekyna_verified_reviews', new Configuration(), $container);
 
         $definition = $container->getDefinition(Service\ProductUpdater::class);
-        $definition->setArgument(2, $config['credential']['website_id']);
+        $definition->setArgument(3, $config['credential']['website_id']);
 
         $definition = $container->getDefinition(Service\ReviewUpdater::class);
-        $definition->setArgument(2, $config['credential']['website_id']);
+        $definition->setArgument(3, $config['credential']['website_id']);
 
         $definition = $container->getDefinition(Service\OrderNotifier::class);
         $definition->setArgument(5, [
