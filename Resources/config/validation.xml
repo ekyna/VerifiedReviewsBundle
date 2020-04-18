@@ -31,9 +31,6 @@
                 <option name="value">0</option>
             </constraint>
         </property>
-        <property name="fetchedAt">
-            <constraint name="NotNull"/>
-        </property>
     </class>
 
     <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview">
