@@ -33,19 +33,10 @@
         </property>
     </class>
 
-    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview">
-        <property name="productReviewId">
-            <constraint name="NotBlank"/>
-        </property>
+    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review">
         <property name="product">
             <constraint name="NotNull"/>
         </property>
-        <property name="review">
-            <constraint name="NotNull"/>
-        </property>
-    </class>
-
-    <class name="Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review">
         <property name="reviewId">
             <constraint name="NotBlank"/>
         </property>

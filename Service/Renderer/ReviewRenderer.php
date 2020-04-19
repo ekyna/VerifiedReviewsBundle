@@ -8,13 +8,14 @@ use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Templating\EngineInterface;
 use Symfony\Component\Translation\TranslatorInterface;
+use Twig\Extension\RuntimeExtensionInterface;
 
 /**
  * Class ReviewRenderer
  * @package Ekyna\Bundle\VerifiedReviewsBundle\Service\Renderer
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class ReviewRenderer
+class ReviewRenderer implements RuntimeExtensionInterface
 {
     /**
      * @var ProductRepository

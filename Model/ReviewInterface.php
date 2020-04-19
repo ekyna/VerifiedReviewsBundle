@@ -2,8 +2,10 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Model;
 
+use DateTime;
+use Doctrine\Common\Collections\Collection;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment;
-use Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview;
+use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
 use Ekyna\Component\Resource\Model\ResourceInterface;
 
 /**
@@ -16,34 +18,23 @@ interface ReviewInterface extends ResourceInterface
     /**
      * Returns the product reviews.
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection|ProductReview[]
+     * @return Product|null
      */
-    public function getProductReviews();
+    public function getProduct(): ?Product;
 
     /**
-     * Adds the product review.
-     *
-     * @param ProductReview $productReview
+     * @param Product $product
      *
      * @return $this|ReviewInterface
      */
-    public function addProductReview(ProductReview $productReview);
-
-    /**
-     * Removes the product review.
-     *
-     * @param ProductReview $productReview
-     *
-     * @return $this|ReviewInterface
-     */
-    public function removeProductReview(ProductReview $productReview);
+    public function setProduct(Product $product): ReviewInterface;
 
     /**
      * Returns the reviewId.
      *
-     * @return string
+     * @return string|null
      */
-    public function getReviewId();
+    public function getReviewId(): ?string;
 
     /**
      * Sets the review id.
@@ -52,14 +43,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setReviewId(string $id);
+    public function setReviewId(string $id): ReviewInterface;
 
     /**
      * Returns the email.
      *
-     * @return string
+     * @return string|null
      */
-    public function getEmail();
+    public function getEmail(): ?string;
 
     /**
      * Sets the email.
@@ -68,14 +59,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setEmail(string $email = null);
+    public function setEmail(string $email = null): ReviewInterface;
 
     /**
      * Returns the last name.
      *
-     * @return string
+     * @return string|null
      */
-    public function getLastName();
+    public function getLastName(): ?string;
 
     /**
      * Sets the last name.
@@ -84,14 +75,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setLastName(string $name = null);
+    public function setLastName(string $name = null): ReviewInterface;
 
     /**
      * Returns the first name.
      *
-     * @return string
+     * @return string|null
      */
-    public function getFirstName();
+    public function getFirstName(): ?string;
 
     /**
      * Sets the first name.
@@ -100,30 +91,30 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setFirstName(string $name = null);
+    public function setFirstName(string $name = null): ReviewInterface;
 
     /**
      * Returns the date.
      *
-     * @return \DateTime
+     * @return DateTime|null
      */
-    public function getDate();
+    public function getDate(): ?DateTime;
 
     /**
      * Sets the date.
      *
-     * @param \DateTime $date
+     * @param DateTime $date
      *
      * @return $this|ReviewInterface
      */
-    public function setDate(\DateTime $date);
+    public function setDate(DateTime $date): ReviewInterface;
 
     /**
      * Returns the content.
      *
-     * @return string
+     * @return string|null
      */
-    public function getContent();
+    public function getContent(): ?string;
 
     /**
      * Sets the content.
@@ -132,14 +123,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setContent(string $content);
+    public function setContent(string $content): ReviewInterface;
 
     /**
      * Returns the rate.
      *
-     * @return int
+     * @return int|null
      */
-    public function getRate();
+    public function getRate(): ?int;
 
     /**
      * Sets the rate.
@@ -148,14 +139,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setRate(int $rate);
+    public function setRate(int $rate): ReviewInterface;
 
     /**
      * Returns the order number.
      *
-     * @return string
+     * @return string|null
      */
-    public function getOrderNumber();
+    public function getOrderNumber(): ?string;
 
     /**
      * Sets the order number.
@@ -164,14 +155,14 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function setOrderNumber(string $number);
+    public function setOrderNumber(string $number): ReviewInterface;
 
     /**
      * Returns the comments.
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection|Comment[]
+     * @return Collection|Comment[]
      */
-    public function getComments();
+    public function getComments(): Collection;
 
     /**
      * Adds the comment.
@@ -180,7 +171,7 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function addComment(Comment $comment);
+    public function addComment(Comment $comment): ReviewInterface;
 
     /**
      * Removes the comment.
@@ -189,5 +180,5 @@ interface ReviewInterface extends ResourceInterface
      *
      * @return $this|ReviewInterface
      */
-    public function removeComment(Comment $comment);
+    public function removeComment(Comment $comment): ReviewInterface;
 }

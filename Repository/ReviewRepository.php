@@ -3,6 +3,7 @@
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Repository;
 
 use Ekyna\Bundle\ProductBundle\Model\ProductInterface;
+use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
 use Ekyna\Component\Resource\Doctrine\ORM\ResourceRepository;
 
 /**
@@ -19,17 +20,17 @@ class ReviewRepository extends ResourceRepository
 
 
     /**
-     * Finds one review by its review id.
+     * Finds one review by its review id (id_review_product).
      *
-     * @param string $reviewId
+     * @param string $id
      *
-     * @return \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review|null
+     * @return ReviewInterface|null
      */
-    public function findOneByReviewId($reviewId)
+    public function findOneByReviewId(string $id): ?ReviewInterface
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->findOneBy([
-            'reviewId' => $reviewId,
+            'reviewId' => $id,
         ]);
     }
 
@@ -40,16 +41,15 @@ class ReviewRepository extends ResourceRepository
      * @param int              $limit
      * @param int              $offset
      *
-     * @return \Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review[]
+     * @return ReviewInterface[]
      */
-    public function findByProduct(ProductInterface $product, $limit = 16, $offset = 0)
+    public function findByProduct(ProductInterface $product, int $limit = 16, int $offset = 0): array
     {
         if (!$this->findByProductQuery) {
             $qb = $this->createQueryBuilder('r');
 
             $this->findByProductQuery = $qb
-                ->join('r.productReviews', 'pr')
-                ->join('pr.product', 'p')
+                ->join('r.product', 'p')
                 ->andWhere($qb->expr()->eq('p.product', ':product'))
                 ->orderBy('r.date', 'DESC')
                 ->getQuery();

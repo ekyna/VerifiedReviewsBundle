@@ -45,6 +45,7 @@
             <argument type="service" id="Symfony\Component\Translation\TranslatorInterface"/>
             <argument type="service" id="Symfony\Component\Templating\EngineInterface"/>
             <argument type="collection"/><!-- Replace by DI extension -->
+            <tag name="twig.runtime"/>
         </service>
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\Serializer\ReviewNormalizer"

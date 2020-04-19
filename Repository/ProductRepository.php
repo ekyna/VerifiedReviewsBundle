@@ -27,7 +27,7 @@ class ProductRepository extends ServiceEntityRepository
      *
      * @return Product|null
      */
-    public function findOneByProduct(ProductInterface $product)
+    public function findOneByProduct(ProductInterface $product): ?Product
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->findOneBy(['product' => $product]);

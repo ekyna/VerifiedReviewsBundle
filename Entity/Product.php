@@ -18,9 +18,9 @@ class Product
     private $id;
 
     /**
-     * @var ArrayCollection|ProductReview[]
+     * @var ArrayCollection|Review[]
      */
-    private $productReviews;
+    private $reviews;
 
     /**
      * @var ProductInterface
@@ -48,7 +48,7 @@ class Product
      */
     public function __construct()
     {
-        $this->productReviews = new ArrayCollection();
+        $this->reviews = new ArrayCollection();
     }
 
     /**
@@ -64,25 +64,25 @@ class Product
     /**
      * Returns the product reviews.
      *
-     * @return ArrayCollection|ProductReview[]
+     * @return ArrayCollection|Review[]
      */
-    public function getProductReviews()
+    public function getReviews()
     {
-        return $this->productReviews;
+        return $this->reviews;
     }
 
     /**
      * Adds the product review.
      *
-     * @param ProductReview $productReview
+     * @param Review $review
      *
      * @return Product
      */
-    public function addProductReview(ProductReview $productReview)
+    public function addReview(Review $review)
     {
-        if (!$this->productReviews->contains($productReview)) {
-            $this->productReviews->add($productReview);
-            $productReview->setProduct($this);
+        if (!$this->reviews->contains($review)) {
+            $this->reviews->add($review);
+            $review->setProduct($this);
         }
 
         return $this;
@@ -91,15 +91,15 @@ class Product
     /**
      * Removes the product review.
      *
-     * @param ProductReview $productReview
+     * @param Review $review
      *
      * @return Product
      */
-    public function removeProductReview(ProductReview $productReview)
+    public function removeReview(Review $review)
     {
-        if ($this->productReviews->contains($productReview)) {
-            $this->productReviews->removeElement($productReview);
-            $productReview->setProduct(null);
+        if ($this->reviews->contains($review)) {
+            $this->reviews->removeElement($review);
+            $review->setProduct(null);
         }
 
         return $this;

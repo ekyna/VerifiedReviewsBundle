@@ -2,12 +2,12 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Service;
 
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Comment;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Product;
-use Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview;
 use Ekyna\Bundle\VerifiedReviewsBundle\Entity\Review;
 use Ekyna\Bundle\VerifiedReviewsBundle\Repository\ReviewRepository;
 use GuzzleHttp\Client;
@@ -48,11 +48,6 @@ class ReviewUpdater
     protected $nextProductQuery;
 
     /**
-     * @var \Doctrine\ORM\Query
-     */
-    protected $findProductReviewByIdQuery;
-
-    /**
      * @var Client
      */
     protected $client;
@@ -81,12 +76,18 @@ class ReviewUpdater
     /**
      * Updates the review product list.
      *
+     * @param bool $full Whether to fetch all reviews (default is to stop when a review is older that 30 days, by product)
+     *
      * @return bool Whether it succeed.
      */
-    public function updateReviews()
+    public function updateReviews(bool $full = false)
     {
         if (empty($this->websiteId)) {
             return false;
+        }
+
+        if ($full) {
+            $this->clearFetchedAt();
         }
 
         $directory = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
@@ -98,35 +99,31 @@ class ReviewUpdater
         while (null !== $product = $this->findNextProduct()) {
             if (!empty($data = $this->loadReviewsJson($product))) {
                 foreach ($data as $datum) {
-                    $productReview = $this->findProductReviewById($datum['id_review_product']);
-                    if (!$productReview) {
-                        // If review exists
-                        $review = $this->reviewRepository->findOneByReviewId($datum['id_review']);
-                        if (!$review) {
-                            /** @var Review $review */
-                            $review = $this->reviewRepository->createNew();
-                        }
-
-                        $this->updateReview($review, $datum);
-                    } else {
-                        $review = $productReview->getReview();
-
-                        if (!$this->updateReview($review, $datum)) {
-                            continue;
+                    if (!$full) {
+                        $diff = (new DateTime($datum['review_date']))->diff(new DateTime(), true)->days;
+                        if ($diff > 30) {
+                            break;
                         }
                     }
+
+                    $reviewId = $datum['id_review_product'];
+
+                    $review = $this
+                        ->reviewRepository
+                        ->findOneByReviewId($reviewId);
+
+                    if (!$review) {
+                        /** @var Review $review */
+                        $review = $this->reviewRepository->createNew();
+                        $review
+                            ->setReviewId($reviewId)
+                            ->setProduct($product);
+                    }
+
+                    $this->updateReview($review, $datum);
 
                     if (0 < $this->validator->validate($review)->count()) {
                         continue;
-                    }
-
-                    if (!$productReview) {
-                        // Creates the ProductReview
-                        $productReview = new ProductReview();
-                        $productReview
-                            ->setProductReviewId($datum['id_review_product'])
-                            ->setProduct($product)
-                            ->setReview($review);
                     }
 
                     $this->manager->persist($review);
@@ -139,7 +136,7 @@ class ReviewUpdater
                 }
             }
 
-            $product->setFetchedAt(new \DateTime());
+            $product->setFetchedAt(new DateTime());
             $this->manager->persist($product);
             $this->manager->flush();
 
@@ -163,10 +160,6 @@ class ReviewUpdater
     {
         $changed = false;
 
-        if ($review->getReviewId() != $data['id_review']) {
-            $review->setReviewId($data['id_review']);
-            $changed = true;
-        }
         if ($review->getEmail() != $datum = $this->sanitizeString($data['email'])) {
             $review->setEmail($datum);
             $changed = true;
@@ -179,7 +172,7 @@ class ReviewUpdater
             $review->setFirstName($datum);
             $changed = true;
         }
-        if ($review->getDate() != $date = new \DateTime($data['review_date'])) {
+        if ($review->getDate() != $date = new DateTime($data['review_date'])) {
             $review->setDate($date);
             $changed = true;
         }
@@ -204,20 +197,19 @@ class ReviewUpdater
 
                 // Existing comment lookup
                 foreach ($review->getComments() as $c) {
-                    if ($c->getDate()->format('Y-m-d H:i:s') != $date->format('Y-m-d H:i:s')) {
-                        continue;
-                    }
+                    $sameDate = $c->getDate()->format('Y-m-d H:i:s') === $date->format('Y-m-d H:i:s');
+                    $sameOrigin = $c->isCustomer() === $isCustomer;
+                    if ($sameDate && $sameOrigin) {
+                        // Comment found
+                        // Update message if needed
+                        if ($c->getMessage() != $message) {
+                            $c->setMessage($message);
+                            $changed = true;
+                        }
 
-                    if ($c->isCustomer() === $isCustomer) {
-                        continue;
+                        // Next feed comment
+                        continue 2;
                     }
-
-                    if ($c->getMessage() != $message) {
-                        $c->setMessage($message);
-                        $changed = true;
-                    }
-
-                    continue 2;
                 }
 
                 $comment = new Comment();
@@ -246,7 +238,7 @@ class ReviewUpdater
     {
         $string = trim($string);
 
-        return empty($string) ? $string : null;
+        return !empty($string) ? $string : null;
     }
 
     /**
@@ -279,12 +271,12 @@ class ReviewUpdater
      *
      * @param string $input
      *
-     * @return \DateTime
+     * @return DateTime
      */
-    protected function parseCommentDate(string $input)
+    protected function parseCommentDate(string $input): DateTime
     {
         try {
-            return new \DateTime($input);
+            return new DateTime($input);
         } catch (\Exception $e) {
         }
 
@@ -294,11 +286,11 @@ class ReviewUpdater
         }
 
         /*$date = "{$matches['date']}T{$matches['time']}" . ($matches['zone'][0] === '-' ? '' : '+') . $matches['zone'];
-        if (!$date = \DateTime::createFromFormat(\DateTime::ATOM, $date)) {
+        if (!$date = DateTime::createFromFormat(DateTime::ATOM, $date)) {
             throw new \Exception("Failed to parse date time string.");
         }*/
 
-        return new \DateTime("{$matches['date']} {$matches['time']}");
+        return new DateTime("{$matches['date']} {$matches['time']}");
     }
 
     /**
@@ -306,58 +298,42 @@ class ReviewUpdater
      *
      * @return Product|null
      */
-    protected function findNextProduct()
+    protected function findNextProduct(): ?Product
     {
         if (!$this->nextProductQuery) {
             $ex = new Expr();
 
-            $this->nextProductQuery = $this->manager
+            $this->nextProductQuery = $this
+                ->manager
                 ->createQueryBuilder()
                 ->from(Product::class, 'p')
                 ->select('p')
                 ->where($ex->orX(
                     $ex->isNull('p.fetchedAt'),
-                    $ex->lte('p.fetchedAt', ':yesterday')
+                    $ex->lte('p.fetchedAt', ':from_date')
                 ))
+                ->addOrderBy('p.fetchedAt', 'ASC')
                 ->setMaxResults(1)
                 ->getQuery()
+                ->setParameter('from_date', new DateTime('-1 day'), Types::DATETIME_MUTABLE)
                 ->useQueryCache(true);
         }
 
-        $yesterday = new \DateTime('-1 day');
-
-        return $this
-            ->nextProductQuery
-            ->setParameter('yesterday', $yesterday, Types::DATETIME_MUTABLE)
-            ->getOneOrNullResult();
+        return $this->nextProductQuery->getOneOrNullResult();
     }
 
     /**
-     * Finds the product review by its id.
-     *
-     * @param string $id
-     *
-     * @return ProductReview|null
+     * Clears the products "fetched at" date.
      */
-    protected function findProductReviewById($id)
+    protected function clearFetchedAt(): void
     {
-        if (!$this->findProductReviewByIdQuery) {
-            $ex = new Expr();
-
-            $this->findProductReviewByIdQuery = $this->manager
-                ->createQueryBuilder()
-                ->from(ProductReview::class, 'pr')
-                ->select('pr')
-                ->where($ex->eq('pr.productReviewId', ':id'))
-                ->setMaxResults(1)
-                ->getQuery()
-                ->useQueryCache(true);
-        }
-
-        return $this
-            ->findProductReviewByIdQuery
-            ->setParameter('id', $id)
-            ->getOneOrNullResult();
+        /** @noinspection SqlResolve */
+        $this
+            ->manager
+            ->createQuery(sprintf(
+                "UPDATE %s p SET p.fetchedAt=NULL",
+                Product::class))
+            ->execute();
     }
 
     /**

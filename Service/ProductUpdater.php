@@ -45,6 +45,7 @@ class ProductUpdater
      *
      * @param ProductRepositoryInterface $productProductRepository
      * @param ValidatorInterface         $validator
+     * @param EntityManagerInterface     $manager
      * @param string                     $websiteId
      */
     public function __construct(
@@ -75,8 +76,8 @@ class ProductUpdater
         $path = implode('/', str_split(substr($this->websiteId, 0, 3))) . '/' . $this->websiteId;
 
         try {
-            $res = $client->request('GET', sprintf(static::URL, $path));
-        } catch (GuzzleException $e) {
+            $res = $client->get(sprintf(static::URL, $path));
+        } /** @noinspection PhpRedundantCatchClauseInspection */ catch (GuzzleException $e) {
             return false;
         }
 
@@ -91,6 +92,7 @@ class ProductUpdater
             return true;
         }
 
+        /** @var \Ekyna\Bundle\VerifiedReviewsBundle\Repository\ProductRepository $reviewProductRepository */
         $reviewProductRepository = $this->manager->getRepository(Product::class);
 
         $count = 0;
@@ -99,10 +101,7 @@ class ProductUpdater
                 continue;
             }
 
-            /** @var Product $reviewProduct */
-            $reviewProduct = $reviewProductRepository->findOneBy([
-                'product' => $productProduct,
-            ]);
+            $reviewProduct = $reviewProductRepository->findOneByProduct($productProduct);
             if (!$reviewProduct) {
                 $reviewProduct = new Product();
                 $reviewProduct->setProduct($productProduct);

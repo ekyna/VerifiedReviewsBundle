@@ -16,10 +16,11 @@
         <field name="rate" column="rate" type="float" precision="5" scale="4" nullable="false"/>
         <field name="fetchedAt" column="fetched_at" type="datetime" nullable="true"/>
 
-        <one-to-many target-entity="Ekyna\Bundle\VerifiedReviewsBundle\Entity\ProductReview"
-                     field="productReviews" mapped-by="product" orphan-removal="true">
+        <one-to-many target-entity="Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface"
+                     field="reviews" mapped-by="product">
             <cascade>
-                <cascade-all/>
+                <cascade-persist/>
+                <cascade-remove/>
             </cascade>
         </one-to-many>
 

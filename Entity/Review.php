@@ -2,7 +2,9 @@
 
 namespace Ekyna\Bundle\VerifiedReviewsBundle\Entity;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
 
 /**
@@ -18,12 +20,12 @@ class Review implements ReviewInterface
     protected $id;
 
     /**
-     * @var ArrayCollection|ProductReview[]
+     * @var Product
      */
-    protected $productReviews;
+    protected $product;
 
     /**
-     * (review_id)
+     * (product_review_id)
      * @var string
      */
     protected $reviewId;
@@ -69,7 +71,7 @@ class Review implements ReviewInterface
     protected $orderNumber;
 
     /**
-     * @var ArrayCollection|Comment[]
+     * @var Collection|Comment[]
      */
     protected $comments;
 
@@ -79,7 +81,6 @@ class Review implements ReviewInterface
      */
     public function __construct()
     {
-        $this->productReviews = new ArrayCollection();
         $this->comments = new ArrayCollection();
     }
 
@@ -94,20 +95,19 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getProductReviews()
+    public function getProduct(): ?Product
     {
-        return $this->productReviews;
+        return $this->product;
     }
 
     /**
-     * @inheritdoc
+     * @param Product $product
+     *
+     * @return $this
      */
-    public function addProductReview(ProductReview $productReview)
+    public function setProduct(Product $product): ReviewInterface
     {
-        if (!$this->productReviews->contains($productReview)) {
-            $this->productReviews->add($productReview);
-            $productReview->setReview($this);
-        }
+        $this->product = $product;
 
         return $this;
     }
@@ -115,20 +115,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function removeProductReview(ProductReview $productReview)
-    {
-        if ($this->productReviews->contains($productReview)) {
-            $this->productReviews->removeElement($productReview);
-            $productReview->setReview(null);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getReviewId()
+    public function getReviewId(): ?string
     {
         return $this->reviewId;
     }
@@ -136,7 +123,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setReviewId(string $id)
+    public function setReviewId(string $id): ReviewInterface
     {
         $this->reviewId = $id;
 
@@ -146,7 +133,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getEmail()
+    public function getEmail(): ?string
     {
         return $this->email;
     }
@@ -154,7 +141,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setEmail(string $email = null)
+    public function setEmail(string $email = null): ReviewInterface
     {
         $this->email = $email;
 
@@ -164,7 +151,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getLastName()
+    public function getLastName(): ?string
     {
         return $this->lastName;
     }
@@ -172,7 +159,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setLastName(string $name = null)
+    public function setLastName(string $name = null): ReviewInterface
     {
         $this->lastName = $name;
 
@@ -182,7 +169,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getFirstName()
+    public function getFirstName(): ?string
     {
         return $this->firstName;
     }
@@ -190,7 +177,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setFirstName(string $name = null)
+    public function setFirstName(string $name = null): ReviewInterface
     {
         $this->firstName = $name;
 
@@ -200,7 +187,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getDate()
+    public function getDate(): ?DateTime
     {
         return $this->date;
     }
@@ -208,7 +195,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setDate(\DateTime $date)
+    public function setDate(DateTime $date): ReviewInterface
     {
         $this->date = $date;
 
@@ -218,7 +205,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getContent()
+    public function getContent(): ?string
     {
         return $this->content;
     }
@@ -226,7 +213,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setContent(string $content)
+    public function setContent(string $content): ReviewInterface
     {
         $this->content = $content;
 
@@ -236,7 +223,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getRate()
+    public function getRate(): ?int
     {
         return $this->rate;
     }
@@ -244,7 +231,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setRate(int $rate)
+    public function setRate(int $rate): ReviewInterface
     {
         $this->rate = $rate;
 
@@ -254,7 +241,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getOrderNumber()
+    public function getOrderNumber(): ?string
     {
         return $this->orderNumber;
     }
@@ -262,7 +249,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function setOrderNumber(string $number)
+    public function setOrderNumber(string $number): ReviewInterface
     {
         $this->orderNumber = $number;
 
@@ -272,7 +259,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function getComments()
+    public function getComments(): Collection
     {
         return $this->comments;
     }
@@ -280,7 +267,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function addComment(Comment $comment)
+    public function addComment(Comment $comment): ReviewInterface
     {
         if (!$this->comments->contains($comment)) {
             $this->comments->add($comment);
@@ -293,7 +280,7 @@ class Review implements ReviewInterface
     /**
      * @inheritdoc
      */
-    public function removeComment(Comment $comment)
+    public function removeComment(Comment $comment): ReviewInterface
     {
         if ($this->comments->contains($comment)) {
             $this->comments->removeElement($comment);
