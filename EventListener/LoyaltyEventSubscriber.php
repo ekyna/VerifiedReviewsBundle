@@ -66,7 +66,7 @@ class LoyaltyEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $points = (int)$this->features->getConfig(Features::LOYALTY)['credit']['review'];
+        $points = (int)$this->features->getConfig(Features::LOYALTY . '.credit.review');
 
         if (0 >= $points) {
             return;
