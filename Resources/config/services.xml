@@ -31,7 +31,7 @@
 
         <service id="Ekyna\Bundle\VerifiedReviewsBundle\Service\OrderNotifier" public="false">
             <argument type="service" id="Doctrine\ORM\EntityManagerInterface"/>
-            <argument type="service" id="ekyna_commerce.subject_helper"/>
+            <argument type="service" id="Ekyna\Bundle\CommerceBundle\Service\Subject\SubjectHelper"/>
             <argument type="service" id="Liip\ImagineBundle\Imagine\Cache\CacheManager"/>
             <argument type="service" id="Swift_Mailer"/>
             <argument>%ekyna_commerce.order.class%</argument>
