@@ -8,15 +8,15 @@ use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Ekyna\Bundle\VerifiedReviewsBundle\Model\ReviewInterface;
+use Ekyna\Component\Resource\Model\AbstractResource;
 
 /**
  * Class Review
  * @package Ekyna\Bundle\VerifiedReviewsBundle\Entity
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class Review implements ReviewInterface
+class Review extends AbstractResource implements ReviewInterface
 {
-    protected ?int               $id          = null;
     protected ?Product           $product     = null;
     protected ?string            $reviewId    = null; // product_review_id
     protected ?string            $email       = null;
@@ -32,11 +32,6 @@ class Review implements ReviewInterface
     public function __construct()
     {
         $this->comments = new ArrayCollection();
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
     }
 
     public function getProduct(): ?Product
