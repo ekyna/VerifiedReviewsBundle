@@ -12,15 +12,13 @@ use Ekyna\Component\Resource\Repository\ResourceRepositoryInterface;
  * Interface ReviewRepositoryInterface
  * @package Ekyna\Bundle\VerifiedReviewsBundle\Repository
  * @author  Étienne Dauvergne <contact@ekyna.com>
+ *
+ * @implements ResourceRepositoryInterface<ReviewInterface>
  */
 interface ReviewRepositoryInterface extends ResourceRepositoryInterface
 {
     /**
      * Finds one review by its review id (id_review_product).
-     *
-     * @param string $id
-     *
-     * @return ReviewInterface|null
      */
     public function findOneByReviewId(string $id): ?ReviewInterface;
 
