@@ -25,7 +25,7 @@
         </one-to-many>
 
         <one-to-one target-entity="Ekyna\Bundle\ProductBundle\Model\ProductInterface" field="product">
-            <join-column name="product_id" referenced-column-name="id" nullable="false"/>
+            <join-column name="product_id" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </one-to-one>
 
     </entity>
