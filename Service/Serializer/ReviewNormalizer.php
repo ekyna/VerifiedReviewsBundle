@@ -38,7 +38,7 @@ class ReviewNormalizer extends ResourceNormalizer
     {
         $formatter = $this->getFormatter();
 
-        if ($this->contextHasGroup(['Default', 'Front', 'Review'], $context)) {
+        if (self::contextHasGroup(['Default', 'Front', 'Review'], $context)) {
             $comments = [];
             foreach ($object->getComments() as $comment) {
                 $comments[] = [
